@@ -94,7 +94,7 @@ export async function convertImage(file: File, options: ConvertOptions): Promise
   }
   if (!blob) throw new Error("Could not encode this image.");
 
-  let bytes = new Uint8Array(await blob.arrayBuffer());
+  let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(await blob.arrayBuffer());
   let metadataCopied = false;
 
   if (options.preserveMetadata && format === "jpeg") {
