@@ -224,16 +224,27 @@ function Index() {
     }
   }
 
+  function uniqueNames<T extends { name: string }>(files: T[]) {
+    const seen = new Map<string, number>();
+    return files.map((f) => {
+      const count = (seen.get(f.name) ?? 0) + 1;
+      seen.set(f.name, count);
+      if (count === 1) return { ...f, name: f.name };
+      const dot = f.name.lastIndexOf(".");
+      return { ...f, name: `${f.name.slice(0, dot)} (${count})${f.name.slice(dot)}` };
+    });
+  }
+
   async function saveZip() {
     setSaveOpen(false);
-    const zip = await createZip(readyToSave.map((f) => ({ name: f.name, data: f.bytes })));
+    const zip = await createZip(uniqueNames(readyToSave).map((f) => ({ name: f.name, data: f.bytes })));
     download(zip, `converted-photos-${EXT[format]}.zip`);
     toast.success("Zip archive saved.");
   }
 
   function saveIndividual() {
     setSaveOpen(false);
-    readyToSave.forEach((f, i) => setTimeout(() => download(f.blob, f.name), i * 250));
+    uniqueNames(readyToSave).forEach((f, i) => setTimeout(() => download(f.blob, f.name), i * 250));
     toast.success(`Saving ${readyToSave.length} file${readyToSave.length === 1 ? "" : "s"}.`);
   }
 
