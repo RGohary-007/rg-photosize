@@ -25,7 +25,7 @@ function dosDateTime(d: Date) {
   return { time, date };
 }
 
-export type ZipEntry = { name: string; data: Uint8Array };
+export type ZipEntry = { name: string; data: Uint8Array<ArrayBufferLike> };
 
 export async function createZip(entries: ZipEntry[]): Promise<Blob> {
   const encoder = new TextEncoder();

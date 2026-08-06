@@ -27,7 +27,7 @@ export type ConvertOptions = {
 
 export type ConvertResult = {
   blob: Blob;
-  bytes: Uint8Array;
+  bytes: Uint8Array<ArrayBufferLike>;
   width: number;
   height: number;
   format: OutputFormat;
