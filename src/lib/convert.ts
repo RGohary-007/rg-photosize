@@ -1,4 +1,4 @@
-import { extractJpegExif, insertJpegExif } from "./exif";
+import { extractJpegExif, insertJpegExif, buildExifSegment, readOriginalDate } from "./exif";
 
 export type OutputFormat = "jpeg" | "png" | "webp" | "heic";
 
@@ -21,17 +21,28 @@ export const LOSSLESS: OutputFormat[] = ["png", "webp"];
 export type ConvertOptions = {
   format: OutputFormat;
   quality: number; // 0..100
-  scale: number; // 0..100 percent of original dimensions
+  /** When false the photo keeps its original pixel dimensions. */
+  resizeEnabled: boolean;
+  /** Fit box in pixels — the photo is scaled down to fit, aspect ratio kept. */
+  maxWidth: number;
+  maxHeight: number;
   preserveMetadata: boolean;
 };
+
+export type MetadataSource = "copied" | "generated" | "none";
 
 export type ConvertResult = {
   blob: Blob;
   bytes: Uint8Array<ArrayBufferLike>;
   width: number;
   height: number;
+  sourceWidth: number;
+  sourceHeight: number;
   format: OutputFormat;
   metadataCopied: boolean;
+  metadataSource: MetadataSource;
+  originalDate: Date;
+  originalDateFromExif: boolean;
   fellBackToJpeg: boolean;
 };
 
@@ -64,12 +75,30 @@ function encode(canvas: HTMLCanvasElement, mime: string, quality: number) {
   );
 }
 
+/** Target pixel size for a source image, fitted inside the requested box. */
+export function fitDimensions(
+  sourceWidth: number,
+  sourceHeight: number,
+  options: Pick<ConvertOptions, "resizeEnabled" | "maxWidth" | "maxHeight">,
+) {
+  if (!options.resizeEnabled || !sourceWidth || !sourceHeight) {
+    return { width: Math.max(1, sourceWidth), height: Math.max(1, sourceHeight) };
+  }
+  const maxW = Math.max(1, Math.round(options.maxWidth));
+  const maxH = Math.max(1, Math.round(options.maxHeight));
+  const ratio = Math.min(maxW / sourceWidth, maxH / sourceHeight, 1);
+  return {
+    width: Math.max(1, Math.round(sourceWidth * ratio)),
+    height: Math.max(1, Math.round(sourceHeight * ratio)),
+  };
+}
+
 export async function convertImage(file: File, options: ConvertOptions): Promise<ConvertResult> {
+  const { date: originalDate, fromExif: originalDateFromExif } = await readOriginalDate(file);
   const source = await loadBitmap(file);
   const sourceWidth = "width" in source ? source.width : 0;
   const sourceHeight = "height" in source ? source.height : 0;
-  const width = Math.max(1, Math.round((sourceWidth * options.scale) / 100));
-  const height = Math.max(1, Math.round((sourceHeight * options.scale) / 100));
+  const { width, height } = fitDimensions(sourceWidth, sourceHeight, options);
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -95,25 +124,49 @@ export async function convertImage(file: File, options: ConvertOptions): Promise
   if (!blob) throw new Error("Could not encode this image.");
 
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(await blob.arrayBuffer());
-  let metadataCopied = false;
+  let metadataSource: MetadataSource = "none";
 
   if (options.preserveMetadata && format === "jpeg") {
     const original = new Uint8Array(await file.arrayBuffer());
     const exif = extractJpegExif(original);
-    if (exif) {
-      bytes = insertJpegExif(bytes, exif);
-      blob = new Blob([bytes as unknown as BlobPart], { type: MIME.jpeg });
-      metadataCopied = true;
-    }
+    // If the source carried no readable EXIF (HEIC, PNG, screenshots…) we still
+    // write the original capture date/time so nothing is silently lost.
+    const segment = exif ?? buildExifSegment(originalDate);
+    bytes = insertJpegExif(bytes, segment);
+    blob = new Blob([bytes as unknown as BlobPart], { type: MIME.jpeg });
+    metadataSource = exif ? "copied" : "generated";
   }
 
-  return { blob, bytes, width, height, format, metadataCopied, fellBackToJpeg };
+  return {
+    blob,
+    bytes,
+    width,
+    height,
+    sourceWidth,
+    sourceHeight,
+    format,
+    metadataCopied: metadataSource !== "none",
+    metadataSource,
+    originalDate,
+    originalDateFromExif,
+    fellBackToJpeg,
+  };
 }
 
 export function formatBytes(size: number) {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(0)} KB`;
   return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+export function formatDateTime(date: Date) {
+  return date.toLocaleString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function renameFile(name: string, format: OutputFormat) {
