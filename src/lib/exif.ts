@@ -24,7 +24,7 @@ export function insertJpegExif(jpeg: Uint8Array, exifSegment: Uint8Array): Uint8
   // Skip an existing APP0/APP1 header block so we don't duplicate metadata.
   let insertAt = 2;
   if (jpeg[2] === 0xff && ((jpeg[3] ?? 0) === 0xe0 || (jpeg[3] ?? 0) === 0xe1)) {
-    insertAt = 4 + (((jpeg[4] ?? 0) << 8) | (jpeg[5] ?? 0)) - 2;
+    insertAt = 4 + (((jpeg[4] ?? 0) << 8) | (jpeg[5] ?? 0));
   }
   const out = new Uint8Array(jpeg.length + exifSegment.length);
   out.set(jpeg.subarray(0, insertAt), 0);
