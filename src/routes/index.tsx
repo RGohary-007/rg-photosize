@@ -1,20 +1,45 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ImagePlus, Trash2, Download, Loader2, Wand2, Images } from "lucide-react";
+import {
+  ImagePlus,
+  Trash2,
+  Download,
+  Loader2,
+  Wand2,
+  Images,
+  AlertCircle,
+  ListX,
+  BarChart3,
+  ChevronDown,
+  Cloud,
+  Apple,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Controls, type OriginalsMode } from "@/components/converter/Controls";
 import { SaveAllDialog } from "@/components/converter/SaveAllDialog";
+import { ConversionSummary, type Summary } from "@/components/converter/SummaryDialog";
 import {
   convertImage,
   formatBytes,
+  formatDateTime,
   renameFile,
   EXT,
   MIME,
+  type MetadataSource,
   type OutputFormat,
 } from "@/lib/convert";
+import { readOriginalDate } from "@/lib/exif";
 import { createZip } from "@/lib/zip";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +58,8 @@ export const Route = createFileRoute("/")({
         content:
           "Resize and convert your photo library to JPEG, HEIC, PNG or WebP with optional metadata preservation.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,
@@ -44,6 +71,9 @@ type Item = {
   name: string;
   size: number;
   previewUrl: string;
+  originalDate?: Date;
+  originalDateFromExif?: boolean;
+  error?: string;
   converted?: {
     name: string;
     blob: Blob;
@@ -53,6 +83,7 @@ type Item = {
     height: number;
     format: OutputFormat;
     metadataCopied: boolean;
+    metadataSource: MetadataSource;
     previewUrl: string;
   };
   isConvertedItem?: boolean;
@@ -69,47 +100,78 @@ function download(blob: Blob, name: string) {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
+const EMPTY_SUMMARY: Summary = { count: 0, failed: 0, before: 0, after: 0, byFormat: [] };
+
 function Index() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [format, setFormat] = useState<OutputFormat>("jpeg");
   const [quality, setQuality] = useState(40);
-  const [scale, setScale] = useState(40);
+  const [resizeEnabled, setResizeEnabled] = useState(true);
+  const [maxWidth, setMaxWidth] = useState(1280);
+  const [maxHeight, setMaxHeight] = useState(1280);
   const [preserveMetadata, setPreserveMetadata] = useState(false);
   const [originals, setOriginals] = useState<OriginalsMode>("keep");
   const [busy, setBusy] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  const [summary, setSummary] = useState<Summary>(EMPTY_SUMMARY);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const readyToSave = useMemo(
     () =>
       items
-        .filter((i) => i.converted)
+        .filter((i) => i.converted && !i.error)
         .map((i) => ({ name: i.converted!.name, blob: i.converted!.blob, bytes: i.converted!.bytes })),
     [items],
   );
 
-  const totals = useMemo(() => {
-    const withResult = items.filter((i) => i.converted);
-    const before = withResult.reduce((s, i) => s + i.size, 0);
-    const after = withResult.reduce((s, i) => s + i.converted!.size, 0);
-    return { count: withResult.length, before, after };
-  }, [items]);
+  function buildSummary(
+    done: { before: number; after: number; format: OutputFormat }[],
+    failed: number,
+  ): Summary {
+    const before = done.reduce((s, d) => s + d.before, 0);
+    const after = done.reduce((s, d) => s + d.after, 0);
+    const map = new Map<OutputFormat, { count: number; before: number; after: number }>();
+    for (const d of done) {
+      const acc = map.get(d.format) ?? { count: 0, before: 0, after: 0 };
+      acc.count += 1;
+      acc.before += d.before;
+      acc.after += d.after;
+      map.set(d.format, acc);
+    }
+    return {
+      count: done.length,
+      failed,
+      before,
+      after,
+      byFormat: [...map.entries()].map(([f, v]) => ({ format: f, ...v })),
+    };
+  }
 
-  function addFiles(files: FileList | null) {
+
+  async function addFiles(files: FileList | null) {
     if (!files?.length) return;
-    const next: Item[] = Array.from(files)
-      .filter((f) => f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name))
-      .map((f) => ({
-        id: crypto.randomUUID(),
-        file: f,
-        name: f.name,
-        size: f.size,
-        previewUrl: URL.createObjectURL(f),
-      }));
-    if (!next.length) {
+    const accepted = Array.from(files).filter(
+      (f) => f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name),
+    );
+    if (!accepted.length) {
       toast.error("Those files aren't images.");
       return;
     }
+    const next: Item[] = await Promise.all(
+      accepted.map(async (f) => {
+        const { date, fromExif } = await readOriginalDate(f);
+        return {
+          id: crypto.randomUUID(),
+          file: f,
+          name: f.name,
+          size: f.size,
+          previewUrl: URL.createObjectURL(f),
+          originalDate: date,
+          originalDateFromExif: fromExif,
+        };
+      }),
+    );
     setItems((prev) => [...prev, ...next]);
   }
 
@@ -129,11 +191,25 @@ function Index() {
     }
   }
 
+  function clearAll() {
+    setItems((prev) => {
+      for (const item of prev) {
+        URL.revokeObjectURL(item.previewUrl);
+        if (item.converted?.previewUrl) URL.revokeObjectURL(item.converted.previewUrl);
+      }
+      return [];
+    });
+    setSummary(EMPTY_SUMMARY);
+    setSummaryOpen(false);
+    toast.success("List cleared.");
+  }
+
   async function convertAll() {
     if (!items.length) return;
     setBusy(true);
     let fallbacks = 0;
-    let metadataMisses = 0;
+    let failed = 0;
+    let generatedMetadata = 0;
     try {
       const results = await Promise.all(
         items.map(async (item) => {
@@ -141,28 +217,37 @@ function Index() {
             const r = await convertImage(item.file, {
               format,
               quality,
-              scale,
+              resizeEnabled,
+              maxWidth,
+              maxHeight,
               preserveMetadata,
             });
             if (r.fellBackToJpeg) fallbacks++;
-            if (preserveMetadata && !r.metadataCopied) metadataMisses++;
-            return { item, r };
+            if (r.metadataSource === "generated") generatedMetadata++;
+            return { item, r, error: null as string | null };
           } catch (error) {
-            toast.error(`${item.name}: ${(error as Error).message}`);
-            return { item, r: null };
+            failed++;
+            return { item, r: null, error: (error as Error).message };
           }
         }),
       );
 
       setItems((prev) => {
-        const map = new Map(results.map((x) => [x.item.id, x.r]));
+        const map = new Map(results.map((x) => [x.item.id, x]));
         const out: Item[] = [];
         for (const item of prev) {
-          const r = map.get(item.id);
-          if (!r) {
+          const result = map.get(item.id);
+          if (!result) {
             out.push(item);
             continue;
           }
+          if (!result.r) {
+            if (item.converted?.previewUrl) URL.revokeObjectURL(item.converted.previewUrl);
+            const { converted: _drop, ...rest } = item;
+            out.push({ ...rest, error: result.error ?? "Conversion failed." });
+            continue;
+          }
+          const r = result.r;
           const name = renameFile(item.name, r.format);
           const convertedFile = new File([r.blob], name, { type: MIME[r.format] });
           if (originals === "replace") {
@@ -171,8 +256,10 @@ function Index() {
               id: item.id,
               file: convertedFile,
               name,
-              size: r.blob.size,
+              size: item.size,
               previewUrl: URL.createObjectURL(r.blob),
+              originalDate: r.originalDate,
+              originalDateFromExif: r.originalDateFromExif,
               isConvertedItem: true,
               converted: {
                 name,
@@ -183,13 +270,18 @@ function Index() {
                 height: r.height,
                 format: r.format,
                 metadataCopied: r.metadataCopied,
+                metadataSource: r.metadataSource,
                 previewUrl: "",
               },
             });
           } else {
             if (item.converted?.previewUrl) URL.revokeObjectURL(item.converted.previewUrl);
+            const { error: _previousError, ...base } = item;
             out.push({
-              ...item,
+              ...base,
+
+              originalDate: r.originalDate,
+              originalDateFromExif: r.originalDateFromExif,
               converted: {
                 name,
                 blob: r.blob,
@@ -199,6 +291,7 @@ function Index() {
                 height: r.height,
                 format: r.format,
                 metadataCopied: r.metadataCopied,
+                metadataSource: r.metadataSource,
                 previewUrl: URL.createObjectURL(r.blob),
               },
             });
@@ -207,16 +300,30 @@ function Index() {
         return out;
       });
 
+      const built = buildSummary(
+        results
+          .filter((x) => x.r)
+          .map((x) => ({ before: x.item.size, after: x.r!.blob.size, format: x.r!.format })),
+        failed,
+      );
+      setSummary(built);
+      if (built.count > 0) setSummaryOpen(true);
+
+      if (failed) {
+        toast.error(
+          `${failed} photo${failed === 1 ? "" : "s"} could not be converted — they stay in the list without a save button.`,
+        );
+      }
       if (fallbacks) {
         toast.warning(
           `${fallbacks} photo${fallbacks === 1 ? "" : "s"} could not be encoded as ${format.toUpperCase()} on this device, so JPEG was used instead.`,
         );
-      } else {
+      } else if (!failed) {
         toast.success("Conversion finished.");
       }
-      if (metadataMisses) {
+      if (generatedMetadata) {
         toast.info(
-          `${metadataMisses} file${metadataMisses === 1 ? " had" : "s had"} no EXIF metadata to copy.`,
+          `${generatedMetadata} photo${generatedMetadata === 1 ? "" : "s"} had no camera data, so the original date and time was written instead.`,
         );
       }
     } finally {
@@ -259,6 +366,12 @@ function Index() {
     });
   }
 
+  function comingSoon(service: string) {
+    toast.info(
+      `${service} isn't connected to this app yet — pick the photos from your device for now.`,
+    );
+  }
+
   return (
     <main className="min-h-screen bg-background pb-24">
       <header className="border-b border-border bg-card/70 backdrop-blur-xl">
@@ -284,107 +397,182 @@ function Index() {
             multiple
             hidden
             onChange={(e) => {
-              addFiles(e.target.files);
+              void addFiles(e.target.files);
               e.target.value = "";
             }}
           />
 
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="flex w-full flex-col items-center gap-2 rounded-3xl border-2 border-dashed border-border bg-card px-6 py-10 transition-colors hover:border-primary hover:bg-accent/40"
-          >
-            <ImagePlus className="size-7 text-primary" />
-            <span className="text-sm font-semibold">Choose photos</span>
-            <span className="text-xs text-muted-foreground">
+          <div className="rounded-3xl border-2 border-dashed border-border bg-card px-6 py-8 text-center">
+            <ImagePlus className="mx-auto size-7 text-primary" />
+            <p className="mt-2 text-sm font-semibold">Choose photos</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               Pick straight from your photo library — everything stays on your device
-            </span>
-          </button>
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <Button className="rounded-2xl" onClick={() => inputRef.current?.click()}>
+                Photo library
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="rounded-2xl">
+                    Other sources
+                    <ChevronDown className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-64 rounded-2xl">
+                  <DropdownMenuLabel>Where are the photos?</DropdownMenuLabel>
+                  <DropdownMenuItem onSelect={() => inputRef.current?.click()}>
+                    <Images className="size-4" />
+                    This device
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => comingSoon("Google Photos")}>
+                    <Cloud className="size-4" />
+                    Google Photos / Drive
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => comingSoon("iCloud Photos")}>
+                    <Apple className="size-4" />
+                    iCloud Photos
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
 
           {items.length > 0 && (
-            <div className="space-y-2">
-              {items.map((item) => (
-                <article
-                  key={item.id}
-                  className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-ios"
-                >
-                  <img
-                    src={item.converted?.previewUrl || item.previewUrl}
-                    alt={item.name}
-                    loading="lazy"
-                    className="size-16 shrink-0 rounded-xl bg-secondary object-cover"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{item.name}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {formatBytes(item.size)}
-                      {item.converted && !item.isConvertedItem && (
-                        <>
-                          {" → "}
-                          <span
-                            className={cn(
-                              "font-semibold",
-                              item.converted.size < item.size ? "text-success" : "text-warning",
-                            )}
-                          >
-                            {formatBytes(item.converted.size)}
-                          </span>
-                        </>
-                      )}
-                      {item.converted && (
-                        <>
-                          {" · "}
-                          {item.converted.width}×{item.converted.height}
-                        </>
-                      )}
-                    </p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {item.converted && (
-                        <Badge variant="secondary" className="rounded-full text-[10px]">
-                          {item.converted.format.toUpperCase()}
-                        </Badge>
-                      )}
-                      {item.isConvertedItem && (
-                        <Badge className="rounded-full bg-primary text-[10px] text-primary-foreground">
-                          replaced original
-                        </Badge>
-                      )}
-                      {item.converted?.metadataCopied && (
-                        <Badge variant="outline" className="rounded-full text-[10px]">
-                          metadata kept
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  {item.converted && (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">
+                  {items.length} photo{items.length === 1 ? "" : "s"} in the list
+                </p>
+                <div className="flex gap-2">
+                  {summary.count > 0 && (
                     <Button
-                      size="icon"
+                      size="sm"
                       variant="ghost"
-                      aria-label={`Save ${item.converted.name}`}
-                      onClick={() => download(item.converted!.blob, item.converted!.name)}
+                      className="rounded-xl"
+                      onClick={() => setSummaryOpen(true)}
                     >
-                      <Download className="size-4" />
+                      <BarChart3 className="size-4" />
+                      Summary
                     </Button>
                   )}
                   <Button
-                    size="icon"
+                    size="sm"
                     variant="ghost"
-                    aria-label={`Remove ${item.name}`}
-                    onClick={() => remove(item.id)}
+                    className="rounded-xl text-destructive hover:text-destructive"
+                    onClick={clearAll}
                   >
-                    <Trash2 className="size-4 text-destructive" />
+                    <ListX className="size-4" />
+                    Clear all
                   </Button>
-                </article>
-              ))}
-            </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {items.map((item) => (
+                  <article
+                    key={item.id}
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-ios",
+                      item.error ? "border-destructive/50" : "border-border",
+                    )}
+                  >
+                    <img
+                      src={item.converted?.previewUrl || item.previewUrl}
+                      alt={item.name}
+                      loading="lazy"
+                      className="size-16 shrink-0 rounded-xl bg-secondary object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{item.name}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {formatBytes(item.size)}
+                        {item.converted && (
+                          <>
+                            {" → "}
+                            <span
+                              className={cn(
+                                "font-semibold",
+                                item.converted.size < item.size ? "text-success" : "text-warning",
+                              )}
+                            >
+                              {formatBytes(item.converted.size)}
+                            </span>
+                          </>
+                        )}
+                        {item.converted && (
+                          <>
+                            {" · "}
+                            {item.converted.width}×{item.converted.height}
+                          </>
+                        )}
+                      </p>
+                      {item.originalDate && (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Original date: {formatDateTime(item.originalDate)}
+                          {item.originalDateFromExif ? "" : " (file date)"}
+                        </p>
+                      )}
+                      {item.error && (
+                        <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-destructive">
+                          <AlertCircle className="size-3.5" />
+                          {item.error}
+                        </p>
+                      )}
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {item.converted && (
+                          <Badge variant="secondary" className="rounded-full text-[10px]">
+                            {item.converted.format.toUpperCase()}
+                          </Badge>
+                        )}
+                        {item.isConvertedItem && (
+                          <Badge className="rounded-full bg-primary text-[10px] text-primary-foreground">
+                            replaced original
+                          </Badge>
+                        )}
+                        {item.converted?.metadataSource === "copied" && (
+                          <Badge variant="outline" className="rounded-full text-[10px]">
+                            metadata kept
+                          </Badge>
+                        )}
+                        {item.converted?.metadataSource === "generated" && (
+                          <Badge variant="outline" className="rounded-full text-[10px]">
+                            date &amp; time written
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    {item.converted && !item.error && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label={`Save ${item.converted.name}`}
+                        onClick={() => download(item.converted!.blob, item.converted!.name)}
+                      >
+                        <Download className="size-4" />
+                      </Button>
+                    )}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`Remove ${item.name}`}
+                      onClick={() => remove(item.id)}
+                    >
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  </article>
+                ))}
+              </div>
+            </>
           )}
 
-          {totals.count > 0 && (
+          {summary.count > 0 && (
             <p className="text-xs text-muted-foreground">
-              {totals.count} converted · {formatBytes(totals.before)} → {formatBytes(totals.after)} (
-              {totals.after <= totals.before
-                ? `${Math.round((1 - totals.after / Math.max(1, totals.before)) * 100)}% smaller`
-                : `${Math.round((totals.after / Math.max(1, totals.before) - 1) * 100)}% larger`}
+              {summary.count} converted · {formatBytes(summary.before)} → {formatBytes(summary.after)} (
+              {summary.after <= summary.before
+                ? `${Math.round((1 - summary.after / Math.max(1, summary.before)) * 100)}% smaller`
+                : `${Math.round((summary.after / Math.max(1, summary.before) - 1) * 100)}% larger`}
               )
             </p>
           )}
@@ -394,12 +582,16 @@ function Index() {
           <Controls
             format={format}
             quality={quality}
-            scale={scale}
+            resizeEnabled={resizeEnabled}
+            maxWidth={maxWidth}
+            maxHeight={maxHeight}
             preserveMetadata={preserveMetadata}
             originals={originals}
             onFormat={handleFormat}
             onQuality={setQuality}
-            onScale={setScale}
+            onResizeEnabled={setResizeEnabled}
+            onMaxWidth={setMaxWidth}
+            onMaxHeight={setMaxHeight}
             onPreserveMetadata={handleMetadata}
             onOriginals={setOriginals}
           />
@@ -413,24 +605,31 @@ function Index() {
             disabled={!items.length || busy}
             onClick={convertAll}
           >
-            {busy ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Wand2 className="size-4" />
-            )}
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <Wand2 className="size-4" />}
             Convert {items.length ? `${items.length} photo${items.length === 1 ? "" : "s"}` : ""}
           </Button>
-          <Button
-            variant="outline"
-            className="h-11 flex-1 rounded-2xl text-sm font-semibold"
-            disabled={!readyToSave.length}
-            onClick={() => setSaveOpen(true)}
-          >
-            <Download className="size-4" />
-            Save all
-          </Button>
+          {readyToSave.length > 0 && (
+            <Button
+              variant="outline"
+              className="h-11 flex-1 rounded-2xl text-sm font-semibold"
+              onClick={() => setSaveOpen(true)}
+            >
+              <Download className="size-4" />
+              Save all
+            </Button>
+          )}
         </div>
       </div>
+
+      <ConversionSummary
+        open={summaryOpen}
+        summary={summary}
+        onOpenChange={setSummaryOpen}
+        onSaveAll={() => {
+          setSummaryOpen(false);
+          setSaveOpen(true);
+        }}
+      />
 
       <SaveAllDialog
         open={saveOpen}

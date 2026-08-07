@@ -1,6 +1,8 @@
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { InfoTip, RecommendedTick } from "./InfoTip";
@@ -32,15 +34,26 @@ const FORMATS: { value: OutputFormat; label: string; use: string }[] = [
   },
 ];
 
+const SIZE_PRESETS: { label: string; width: number; height: number; hint: string }[] = [
+  { label: "640 px", width: 640, height: 640, hint: "Thumbnails" },
+  { label: "1280 px", width: 1280, height: 1280, hint: "Sharing" },
+  { label: "1920 px", width: 1920, height: 1920, hint: "Full HD" },
+  { label: "2560 px", width: 2560, height: 2560, hint: "Large print" },
+];
+
 type Props = {
   format: OutputFormat;
   quality: number;
-  scale: number;
+  resizeEnabled: boolean;
+  maxWidth: number;
+  maxHeight: number;
   preserveMetadata: boolean;
   originals: OriginalsMode;
   onFormat: (f: OutputFormat) => void;
   onQuality: (q: number) => void;
-  onScale: (s: number) => void;
+  onResizeEnabled: (v: boolean) => void;
+  onMaxWidth: (v: number) => void;
+  onMaxHeight: (v: number) => void;
   onPreserveMetadata: (v: boolean) => void;
   onOriginals: (m: OriginalsMode) => void;
 };
@@ -48,12 +61,16 @@ type Props = {
 export function Controls({
   format,
   quality,
-  scale,
+  resizeEnabled,
+  maxWidth,
+  maxHeight,
   preserveMetadata,
   originals,
   onFormat,
   onQuality,
-  onScale,
+  onResizeEnabled,
+  onMaxWidth,
+  onMaxHeight,
   onPreserveMetadata,
   onOriginals,
 }: Props) {
@@ -90,20 +107,82 @@ export function Controls({
         <p className="text-xs leading-relaxed text-muted-foreground">{active.use}</p>
       </section>
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-semibold">Resize</Label>
-          <span className="text-sm font-medium tabular-nums text-primary">{scale}%</span>
+      <section className="space-y-3" data-testid="resize-section">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="resize" className="text-sm font-semibold">
+              Resize
+            </Label>
+            <InfoTip title="resizing">
+              <p>
+                Photos are scaled down to fit inside the width and height you set, and the original
+                shape is always kept — nothing is cropped or stretched.
+              </p>
+              <p>Photos already smaller than the box are left at their own size.</p>
+            </InfoTip>
+          </div>
+          <Switch id="resize" checked={resizeEnabled} onCheckedChange={onResizeEnabled} />
         </div>
-        <Slider
-          aria-label="Resize percentage"
-          value={[scale]}
-          min={5}
-          max={100}
-          step={5}
-          onValueChange={(v) => onScale(v[0] ?? scale)}
-        />
-        <RecommendedTick percent={40} />
+
+        {resizeEnabled ? (
+          <div className="space-y-3">
+            <div className="flex items-end gap-2">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="max-width" className="text-xs text-muted-foreground">
+                  Max width (px)
+                </Label>
+                <Input
+                  id="max-width"
+                  type="number"
+                  min={16}
+                  max={12000}
+                  inputMode="numeric"
+                  className="rounded-xl"
+                  value={maxWidth}
+                  onChange={(e) => onMaxWidth(Number(e.target.value))}
+                />
+              </div>
+              <span className="pb-2.5 text-sm text-muted-foreground">×</span>
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="max-height" className="text-xs text-muted-foreground">
+                  Max height (px)
+                </Label>
+                <Input
+                  id="max-height"
+                  type="number"
+                  min={16}
+                  max={12000}
+                  inputMode="numeric"
+                  className="rounded-xl"
+                  value={maxHeight}
+                  onChange={(e) => onMaxHeight(Number(e.target.value))}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-1">
+              {SIZE_PRESETS.map((p) => (
+                <Button
+                  key={p.label}
+                  type="button"
+                  variant={maxWidth === p.width && maxHeight === p.height ? "default" : "outline"}
+                  className="h-auto flex-col gap-0 rounded-xl px-1 py-1.5"
+                  onClick={() => {
+                    onMaxWidth(p.width);
+                    onMaxHeight(p.height);
+                  }}
+                >
+                  <span className="text-xs font-semibold">{p.label}</span>
+                  <span className="text-[10px] font-normal opacity-70">{p.hint}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="rounded-2xl bg-secondary p-3 text-xs leading-relaxed text-muted-foreground">
+            Resizing is off — every photo keeps its original pixel dimensions and only the format and
+            quality change.
+          </p>
+        )}
       </section>
 
       {lossless ? (
@@ -169,7 +248,8 @@ export function Controls({
               JPEG OUTPUT ONLY
             </p>
             <p className="text-xs text-muted-foreground">
-              Turning this on switches the output format to JPEG.
+              Turning this on switches the output format to JPEG. The original date and time is
+              always written, even when the source photo carries no camera data.
             </p>
           </div>
           <Switch
