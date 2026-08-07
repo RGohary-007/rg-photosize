@@ -112,12 +112,15 @@ export function Controls({
           className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-xs leading-relaxed"
         >
           <p className="font-semibold text-foreground">
-            {format === "png" ? "PNG is lossless" : "WebP here is saved lossless"} — no quality
-            slider needed.
+            {format === "png" ? "PNG is lossless" : "WebP here is saved lossless"}
           </p>
           <p className="mt-1 text-muted-foreground">
-            Every pixel is kept exactly as it is, so for a normal photo this usually does
-            <strong className="text-foreground"> not shrink the file — it often makes it larger</strong>{" "}
+            Every pixel is kept exactly as it is,
+            <br />
+            so for a normal photo this usually does{" "}
+            <strong className="text-foreground">not shrink the file— it often makes it larger</strong>
+            &nbsp;
+            <br />
             than the original. Use it for graphics and screenshots, or resize above to actually save
             space.
           </p>
