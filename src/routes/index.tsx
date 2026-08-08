@@ -110,12 +110,25 @@ function Index() {
   const [resizeEnabled, setResizeEnabled] = useState(true);
   const [maxWidth, setMaxWidth] = useState(1280);
   const [maxHeight, setMaxHeight] = useState(1280);
-  const [preserveMetadata, setPreserveMetadata] = useState(false);
+  const [preserveMetadata, setPreserveMetadata] = useState(true);
   const [originals, setOriginals] = useState<OriginalsMode>("keep");
   const [busy, setBusy] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [summary, setSummary] = useState<Summary>(EMPTY_SUMMARY);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [heicSupported, setHeicSupported] = useState(true);
+  const [dragging, setDragging] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    void canEncode("heic").then((ok) => {
+      if (alive) setHeicSupported(ok);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
 
   const readyToSave = useMemo(
     () =>
