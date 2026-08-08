@@ -363,11 +363,22 @@ function Index() {
     toast.success("Zip archive saved.");
   }
 
-  function saveIndividual() {
+  async function saveIndividual() {
     setSaveOpen(false);
-    uniqueNames(readyToSave).forEach((f, i) => setTimeout(() => download(f.blob, f.name), i * 250));
-    toast.success(`Saving ${readyToSave.length} file${readyToSave.length === 1 ? "" : "s"}.`);
+    const files = uniqueNames(readyToSave);
+    toast.success(`Saving ${files.length} file${files.length === 1 ? "" : "s"} one by one.`);
+    // Browsers throttle (and silently drop) rapid-fire downloads, which is why
+    // saving several photos at once used to lose the last ones. Spacing them out
+    // and awaiting each click keeps every file.
+    for (const f of files) {
+      download(f.blob, f.name);
+      await new Promise((r) => setTimeout(r, 900));
+    }
+    if (files.length > 2) {
+      toast.info("If your browser asked to block downloads, choose “Allow” or use the zip option.");
+    }
   }
+
 
   function remove(id: string) {
     setItems((prev) => {
