@@ -587,6 +587,8 @@ function Index() {
             maxHeight={maxHeight}
             preserveMetadata={preserveMetadata}
             originals={originals}
+            heicSupported={heicSupported}
+
             onFormat={handleFormat}
             onQuality={setQuality}
             onResizeEnabled={setResizeEnabled}
