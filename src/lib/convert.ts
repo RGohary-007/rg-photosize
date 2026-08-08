@@ -75,6 +75,42 @@ function encode(canvas: HTMLCanvasElement, mime: string, quality: number) {
   );
 }
 
+/**
+ * Safari (and every iOS browser) cannot encode WebP through canvas — it silently
+ * returns a PNG instead. We encode WebP with a WebAssembly encoder so the output
+ * really is a .webp file on every device.
+ */
+async function encodeWebp(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  try {
+    const { encode } = await import("@jsquash/webp");
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const buffer = await encode(data, { lossless: 1, quality: 100 });
+    return new Blob([buffer], { type: MIME.webp });
+  } catch {
+    return null;
+  }
+}
+
+/** Can this browser really produce the requested format? */
+export async function canEncode(format: OutputFormat): Promise<boolean> {
+  if (format === "jpeg" || format === "png") return true;
+  if (format === "webp") {
+    try {
+      await import("@jsquash/webp");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 8;
+  const blob = await encode(canvas, MIME.heic, 0.8);
+  return blob?.type === MIME.heic;
+}
+
+
 /** Target pixel size for a source image, fitted inside the requested box. */
 export function fitDimensions(
   sourceWidth: number,
