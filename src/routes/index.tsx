@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   ImagePlus,
@@ -31,6 +31,7 @@ import { SaveAllDialog } from "@/components/converter/SaveAllDialog";
 import { ConversionSummary, type Summary } from "@/components/converter/SummaryDialog";
 import {
   convertImage,
+  canEncode,
   formatBytes,
   formatDateTime,
   renameFile,
