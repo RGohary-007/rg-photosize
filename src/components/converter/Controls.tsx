@@ -66,8 +66,10 @@ export function Controls({
   resizeEnabled,
   maxWidth,
   maxHeight,
+  preserveMetadata,
   originals,
   heicSupported,
+
 
   onFormat,
   onQuality,
