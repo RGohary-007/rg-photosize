@@ -110,6 +110,17 @@ export function Controls({
           ))}
         </div>
         <p className="text-xs leading-relaxed text-muted-foreground">{active.use}</p>
+        {format === "heic" && !heicSupported && (
+          <p
+            data-testid="heic-unsupported"
+            className="rounded-2xl border border-warning/40 bg-warning/10 p-3 text-xs leading-relaxed"
+          >
+            <strong className="text-foreground">This browser cannot write HEIC files.</strong>{" "}
+            Apple only allows HEIC to be created by the Photos app itself, so these photos will be
+            saved as JPEG instead (with the camera data and original date kept).
+          </p>
+        )}
+
       </section>
 
       <section className="space-y-3" data-testid="resize-section">
