@@ -49,6 +49,7 @@ type Props = {
   maxHeight: number;
   preserveMetadata: boolean;
   originals: OriginalsMode;
+  heicSupported: boolean;
   onFormat: (f: OutputFormat) => void;
   onQuality: (q: number) => void;
   onResizeEnabled: (v: boolean) => void;
@@ -57,6 +58,7 @@ type Props = {
   onPreserveMetadata: (v: boolean) => void;
   onOriginals: (m: OriginalsMode) => void;
 };
+
 
 export function Controls({
   format,
