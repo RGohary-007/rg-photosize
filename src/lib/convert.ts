@@ -146,10 +146,10 @@ export async function convertImage(file: File, options: ConvertOptions): Promise
 
   let format = options.format;
   const quality = Math.min(1, Math.max(0.01, options.quality / 100));
-  let blob = await encode(canvas, MIME[format], quality);
+  let blob = format === "webp" ? await encodeWebp(canvas) : await encode(canvas, MIME[format], quality);
   let fellBackToJpeg = false;
 
-  // Browsers silently fall back to PNG when they can't encode a format (HEIC/WebP).
+  // Browsers silently fall back to PNG when they can't encode a format (HEIC).
   if (!blob || (blob.type !== MIME[format] && format !== "jpeg")) {
     if (format === "heic" || format === "webp") {
       blob = await encode(canvas, MIME.jpeg, quality);
@@ -157,6 +157,7 @@ export async function convertImage(file: File, options: ConvertOptions): Promise
       fellBackToJpeg = true;
     }
   }
+
   if (!blob) throw new Error("Could not encode this image.");
 
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(await blob.arrayBuffer());
