@@ -427,11 +427,30 @@ function Index() {
             }}
           />
 
-          <div className="rounded-3xl border-2 border-dashed border-border bg-card px-6 py-8 text-center">
+          <div
+            data-testid="dropzone"
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              void addFiles(e.dataTransfer.files);
+            }}
+            className={cn(
+              "rounded-3xl border-2 border-dashed bg-card px-6 py-8 text-center transition-colors",
+              dragging ? "border-primary bg-accent/50" : "border-border",
+            )}
+          >
             <ImagePlus className="mx-auto size-7 text-primary" />
-            <p className="mt-2 text-sm font-semibold">Choose photos</p>
+            <p className="mt-2 text-sm font-semibold">
+              {dragging ? "Drop the photos here" : "Choose photos"}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Pick straight from your photo library — everything stays on your device
+              Drag photos straight onto this box, or pick them from your library — everything stays
+              on your device
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <Button className="rounded-2xl" onClick={() => inputRef.current?.click()}>
@@ -662,7 +681,7 @@ function Index() {
         open={saveOpen}
         count={readyToSave.length}
         onOpenChange={setSaveOpen}
-        onIndividual={saveIndividual}
+        onIndividual={() => void saveIndividual()}
         onZip={saveZip}
       />
     </main>
