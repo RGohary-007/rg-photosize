@@ -75,6 +75,42 @@ function encode(canvas: HTMLCanvasElement, mime: string, quality: number) {
   );
 }
 
+/**
+ * Safari (and every iOS browser) cannot encode WebP through canvas — it silently
+ * returns a PNG instead. We encode WebP with a WebAssembly encoder so the output
+ * really is a .webp file on every device.
+ */
+async function encodeWebp(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  try {
+    const { encode } = await import("@jsquash/webp");
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const buffer = await encode(data, { lossless: 1, quality: 100 });
+    return new Blob([buffer], { type: MIME.webp });
+  } catch {
+    return null;
+  }
+}
+
+/** Can this browser really produce the requested format? */
+export async function canEncode(format: OutputFormat): Promise<boolean> {
+  if (format === "jpeg" || format === "png") return true;
+  if (format === "webp") {
+    try {
+      await import("@jsquash/webp");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 8;
+  const blob = await encode(canvas, MIME.heic, 0.8);
+  return blob?.type === MIME.heic;
+}
+
+
 /** Target pixel size for a source image, fitted inside the requested box. */
 export function fitDimensions(
   sourceWidth: number,
@@ -110,10 +146,10 @@ export async function convertImage(file: File, options: ConvertOptions): Promise
 
   let format = options.format;
   const quality = Math.min(1, Math.max(0.01, options.quality / 100));
-  let blob = await encode(canvas, MIME[format], quality);
+  let blob = format === "webp" ? await encodeWebp(canvas) : await encode(canvas, MIME[format], quality);
   let fellBackToJpeg = false;
 
-  // Browsers silently fall back to PNG when they can't encode a format (HEIC/WebP).
+  // Browsers silently fall back to PNG when they can't encode a format (HEIC).
   if (!blob || (blob.type !== MIME[format] && format !== "jpeg")) {
     if (format === "heic" || format === "webp") {
       blob = await encode(canvas, MIME.jpeg, quality);
@@ -121,6 +157,7 @@ export async function convertImage(file: File, options: ConvertOptions): Promise
       fellBackToJpeg = true;
     }
   }
+
   if (!blob) throw new Error("Could not encode this image.");
 
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(await blob.arrayBuffer());

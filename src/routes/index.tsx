@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   ImagePlus,
@@ -31,6 +31,7 @@ import { SaveAllDialog } from "@/components/converter/SaveAllDialog";
 import { ConversionSummary, type Summary } from "@/components/converter/SummaryDialog";
 import {
   convertImage,
+  canEncode,
   formatBytes,
   formatDateTime,
   renameFile,
@@ -110,12 +111,25 @@ function Index() {
   const [resizeEnabled, setResizeEnabled] = useState(true);
   const [maxWidth, setMaxWidth] = useState(1280);
   const [maxHeight, setMaxHeight] = useState(1280);
-  const [preserveMetadata, setPreserveMetadata] = useState(false);
+  const [preserveMetadata, setPreserveMetadata] = useState(true);
   const [originals, setOriginals] = useState<OriginalsMode>("keep");
   const [busy, setBusy] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [summary, setSummary] = useState<Summary>(EMPTY_SUMMARY);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [heicSupported, setHeicSupported] = useState(true);
+  const [dragging, setDragging] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    void canEncode("heic").then((ok) => {
+      if (alive) setHeicSupported(ok);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
 
   const readyToSave = useMemo(
     () =>
@@ -349,11 +363,22 @@ function Index() {
     toast.success("Zip archive saved.");
   }
 
-  function saveIndividual() {
+  async function saveIndividual() {
     setSaveOpen(false);
-    uniqueNames(readyToSave).forEach((f, i) => setTimeout(() => download(f.blob, f.name), i * 250));
-    toast.success(`Saving ${readyToSave.length} file${readyToSave.length === 1 ? "" : "s"}.`);
+    const files = uniqueNames(readyToSave);
+    toast.success(`Saving ${files.length} file${files.length === 1 ? "" : "s"} one by one.`);
+    // Browsers throttle (and silently drop) rapid-fire downloads, which is why
+    // saving several photos at once used to lose the last ones. Spacing them out
+    // and awaiting each click keeps every file.
+    for (const f of files) {
+      download(f.blob, f.name);
+      await new Promise((r) => setTimeout(r, 900));
+    }
+    if (files.length > 2) {
+      toast.info("If your browser asked to block downloads, choose “Allow” or use the zip option.");
+    }
   }
+
 
   function remove(id: string) {
     setItems((prev) => {
@@ -402,11 +427,30 @@ function Index() {
             }}
           />
 
-          <div className="rounded-3xl border-2 border-dashed border-border bg-card px-6 py-8 text-center">
+          <div
+            data-testid="dropzone"
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              void addFiles(e.dataTransfer.files);
+            }}
+            className={cn(
+              "rounded-3xl border-2 border-dashed bg-card px-6 py-8 text-center transition-colors",
+              dragging ? "border-primary bg-accent/50" : "border-border",
+            )}
+          >
             <ImagePlus className="mx-auto size-7 text-primary" />
-            <p className="mt-2 text-sm font-semibold">Choose photos</p>
+            <p className="mt-2 text-sm font-semibold">
+              {dragging ? "Drop the photos here" : "Choose photos"}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Pick straight from your photo library — everything stays on your device
+              Drag photos straight onto this box, or pick them from your library — everything stays
+              on your device
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <Button className="rounded-2xl" onClick={() => inputRef.current?.click()}>
@@ -587,6 +631,8 @@ function Index() {
             maxHeight={maxHeight}
             preserveMetadata={preserveMetadata}
             originals={originals}
+            heicSupported={heicSupported}
+
             onFormat={handleFormat}
             onQuality={setQuality}
             onResizeEnabled={setResizeEnabled}
@@ -635,7 +681,7 @@ function Index() {
         open={saveOpen}
         count={readyToSave.length}
         onOpenChange={setSaveOpen}
-        onIndividual={saveIndividual}
+        onIndividual={() => void saveIndividual()}
         onZip={saveZip}
       />
     </main>
