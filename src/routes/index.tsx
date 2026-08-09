@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   ImagePlus,
   Trash2,
@@ -40,6 +40,8 @@ import {
   type MetadataSource,
   type OutputFormat,
 } from "@/lib/convert";
+import { DrivePicker } from "@/components/converter/DrivePicker";
+import { supabase } from "@/integrations/supabase/client";
 import { readOriginalDate } from "@/lib/exif";
 import { createZip } from "@/lib/zip";
 import { cn } from "@/lib/utils";
@@ -119,6 +121,19 @@ function Index() {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [heicSupported, setHeicSupported] = useState(true);
   const [dragging, setDragging] = useState(false);
+  const [driveOpen, setDriveOpen] = useState(false);
+  const [account, setAccount] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => {
+      setAccount(data.session?.user.email ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAccount(session?.user.email ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -163,7 +178,7 @@ function Index() {
   }
 
 
-  async function addFiles(files: FileList | null) {
+  async function addFiles(files: FileList | File[] | null) {
     if (!files?.length) return;
     const accepted = Array.from(files).filter(
       (f) => f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name),
@@ -393,7 +408,7 @@ function Index() {
 
   function comingSoon(service: string) {
     toast.info(
-      `${service} isn't connected to this app yet — pick the photos from your device for now.`,
+      `${service} has no public web access, so photos can\u2019t be read directly. Save them to this device or to Google Drive first.`,
     );
   }
 
@@ -409,6 +424,34 @@ function Index() {
             <p className="text-xs text-muted-foreground">
               Resize and convert photos from your library
             </p>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            {account ? (
+              <>
+                <span className="hidden max-w-[10rem] truncate text-xs text-muted-foreground sm:block">
+                  {account}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-2xl"
+                  onClick={() => {
+                    void supabase.auth.signOut();
+                  }}
+                >
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-2xl"
+                onClick={() => void navigate({ to: "/auth" })}
+              >
+                Sign in
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -470,9 +513,9 @@ function Index() {
                     This device
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => comingSoon("Google Photos")}>
+                  <DropdownMenuItem onSelect={() => setDriveOpen(true)}>
                     <Cloud className="size-4" />
-                    Google Photos / Drive
+                    Google Drive
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => comingSoon("iCloud Photos")}>
                     <Apple className="size-4" />
