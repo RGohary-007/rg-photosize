@@ -727,6 +727,17 @@ function Index() {
         onIndividual={() => void saveIndividual()}
         onZip={saveZip}
       />
+
+      <DrivePicker
+        open={driveOpen}
+        onOpenChange={setDriveOpen}
+        onImport={(files) => void addFiles(files)}
+        onSignIn={() => {
+          setDriveOpen(false);
+          void navigate({ to: "/auth" });
+        }}
+      />
+
     </main>
   );
 }
