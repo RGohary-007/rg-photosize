@@ -44,7 +44,7 @@ export async function startConnect(userId: string, returnUrl: string) {
     appUserId: userId,
     clientAPIKey: clientApiKey(),
     returnUrl,
-    connectionAPIKey: existing ?? undefined,
+    ...(existing ? { connectionAPIKey: existing } : {}),
     credentialsConfiguration: { scopes: SCOPES },
   });
   return { authorizationUrl };
@@ -86,7 +86,7 @@ async function gateway(userId: string, path: string, init?: RequestInit) {
     connectionAPIKey: await requireKey(userId),
     connectorId: CONNECTOR_ID,
     path,
-    init,
+    ...(init ? { init } : {}),
   });
   if (!res.ok) {
     const body = await res.text();
