@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PhotoSize — Convert & Resize Photos to JPEG, HEIC, PNG" },
+      { title: "PhotoSize — Convert Photos: JPEG, HEIC, PNG, WebP" },
       {
         name: "description",
         content:
@@ -62,9 +62,27 @@ export const Route = createFileRoute("/")({
           "Resize and convert your photo library to JPEG, HEIC, PNG or WebP with optional metadata preservation.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://rg-photosize.lovable.app/" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://rg-photosize.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "PhotoSize",
+          url: "https://rg-photosize.lovable.app/",
+          applicationCategory: "MultimediaApplication",
+          operatingSystem: "Any modern web browser",
+          description:
+            "Convert and resize photos to JPEG, HEIC, PNG or WebP in the browser while keeping camera metadata.",
+        }),
+      },
+    ],
   }),
+
   component: Index,
 });
 
@@ -420,10 +438,13 @@ function Index() {
             <Images className="size-5" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">PhotoSize</h1>
+            <h1 className="text-lg font-semibold tracking-tight">
+              PhotoSize — Resize and convert photos
+            </h1>
             <p className="text-xs text-muted-foreground">
-              Resize and convert photos from your library
+              JPEG, HEIC, PNG and WebP, straight from your photo library
             </p>
+
           </div>
           <div className="ml-auto flex items-center gap-2">
             {account ? (
@@ -529,9 +550,13 @@ function Index() {
           {items.length > 0 && (
             <>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs text-muted-foreground">
-                  {items.length} photo{items.length === 1 ? "" : "s"} in the list
-                </p>
+                <div>
+                  <h2 className="text-sm font-semibold tracking-tight">Your photos</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {items.length} photo{items.length === 1 ? "" : "s"} in the list
+                  </p>
+                </div>
+
                 <div className="flex gap-2">
                   {summary.count > 0 && (
                     <Button
@@ -567,9 +592,11 @@ function Index() {
                   >
                     <img
                       src={item.converted?.previewUrl || item.previewUrl}
-                      alt={item.name}
+                      alt=""
                       loading="lazy"
                       className="size-16 shrink-0 rounded-xl bg-secondary object-cover"
+
+
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{item.name}</p>
@@ -666,7 +693,9 @@ function Index() {
         </section>
 
         <aside className="h-fit rounded-3xl border border-border bg-card p-5 shadow-ios lg:sticky lg:top-6">
+          <h2 className="mb-4 text-sm font-semibold tracking-tight">Conversion settings</h2>
           <Controls
+
             format={format}
             quality={quality}
             resizeEnabled={resizeEnabled}
