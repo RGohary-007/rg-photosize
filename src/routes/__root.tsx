@@ -79,14 +79,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "PhotoSize — Resize & convert photos" },
+      {
+        name: "description",
+        content:
+          "PhotoSize resizes and converts photos to JPEG, HEIC, PNG or WebP right in your browser, with camera metadata kept.",
+      },
+      { name: "author", content: "PhotoSize" },
+      { property: "og:site_name", content: "PhotoSize" },
+      { property: "og:title", content: "PhotoSize — Resize & convert photos" },
+      {
+        property: "og:description",
+        content: "Resize and convert photos in your browser — JPEG, HEIC, PNG and WebP.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -95,7 +102,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "PhotoSize",
+              url: "https://rg-photosize.lovable.app",
+              description:
+                "PhotoSize is a browser-based photo converter that resizes photos and converts them to JPEG, HEIC, PNG or WebP while keeping camera metadata.",
+            },
+            {
+              "@type": "WebSite",
+              name: "PhotoSize",
+              url: "https://rg-photosize.lovable.app",
+              description:
+                "Resize and convert photos to JPEG, HEIC, PNG or WebP directly in the browser.",
+            },
+          ],
+        }),
+      },
+    ],
   }),
+
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
