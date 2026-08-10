@@ -570,9 +570,8 @@ function Index() {
                   >
                     <img
                       src={item.converted?.previewUrl || item.previewUrl}
-                      alt={item.name}
-                      loading="lazy"
-                      className="size-16 shrink-0 rounded-xl bg-secondary object-cover"
+                      alt=""
+
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{item.name}</p>
