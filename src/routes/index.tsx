@@ -532,9 +532,13 @@ function Index() {
           {items.length > 0 && (
             <>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs text-muted-foreground">
-                  {items.length} photo{items.length === 1 ? "" : "s"} in the list
-                </p>
+                <div>
+                  <h2 className="text-sm font-semibold tracking-tight">Your photos</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {items.length} photo{items.length === 1 ? "" : "s"} in the list
+                  </p>
+                </div>
+
                 <div className="flex gap-2">
                   {summary.count > 0 && (
                     <Button
