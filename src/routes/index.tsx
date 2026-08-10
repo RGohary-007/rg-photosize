@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PhotoSize — Convert & Resize Photos to JPEG, HEIC, PNG" },
+      { title: "PhotoSize — Convert Photos: JPEG, HEIC, PNG, WebP" },
       {
         name: "description",
         content:
@@ -62,9 +62,27 @@ export const Route = createFileRoute("/")({
           "Resize and convert your photo library to JPEG, HEIC, PNG or WebP with optional metadata preservation.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://rg-photosize.lovable.app/" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://rg-photosize.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "PhotoSize",
+          url: "https://rg-photosize.lovable.app/",
+          applicationCategory: "MultimediaApplication",
+          operatingSystem: "Any modern web browser",
+          description:
+            "Convert and resize photos to JPEG, HEIC, PNG or WebP in the browser while keeping camera metadata.",
+        }),
+      },
+    ],
   }),
+
   component: Index,
 });
 
