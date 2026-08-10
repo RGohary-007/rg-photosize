@@ -571,6 +571,9 @@ function Index() {
                     <img
                       src={item.converted?.previewUrl || item.previewUrl}
                       alt=""
+                      loading="lazy"
+                      className="size-16 shrink-0 rounded-xl bg-secondary object-cover"
+
 
                     />
                     <div className="min-w-0 flex-1">
