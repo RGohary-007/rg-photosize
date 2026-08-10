@@ -675,7 +675,9 @@ function Index() {
         </section>
 
         <aside className="h-fit rounded-3xl border border-border bg-card p-5 shadow-ios lg:sticky lg:top-6">
+          <h2 className="mb-4 text-sm font-semibold tracking-tight">Conversion settings</h2>
           <Controls
+
             format={format}
             quality={quality}
             resizeEnabled={resizeEnabled}
