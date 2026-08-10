@@ -420,10 +420,13 @@ function Index() {
             <Images className="size-5" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">PhotoSize</h1>
+            <h1 className="text-lg font-semibold tracking-tight">
+              PhotoSize — Resize and convert photos
+            </h1>
             <p className="text-xs text-muted-foreground">
-              Resize and convert photos from your library
+              JPEG, HEIC, PNG and WebP, straight from your photo library
             </p>
+
           </div>
           <div className="ml-auto flex items-center gap-2">
             {account ? (
