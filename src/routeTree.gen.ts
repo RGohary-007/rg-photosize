@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BulkHeicToJpgRouteImport } from './routes/bulk-heic-to-jpg'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as OauthGoogleDriveReturnRouteImport } from './routes/oauth.google-drive.return'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BulkHeicToJpgRoute = BulkHeicToJpgRouteImport.update({
+  id: '/bulk-heic-to-jpg',
+  path: '/bulk-heic-to-jpg',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -38,12 +44,14 @@ const OauthGoogleDriveReturnRoute = OauthGoogleDriveReturnRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
 }
@@ -51,20 +59,38 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/oauth/google-drive/return': typeof OauthGoogleDriveReturnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/sitemap.xml' | '/oauth/google-drive/return'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/bulk-heic-to-jpg'
+    | '/sitemap.xml'
+    | '/oauth/google-drive/return'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/sitemap.xml' | '/oauth/google-drive/return'
-  id: '__root__' | '/' | '/auth' | '/sitemap.xml' | '/oauth/google-drive/return'
+  to:
+    | '/'
+    | '/auth'
+    | '/bulk-heic-to-jpg'
+    | '/sitemap.xml'
+    | '/oauth/google-drive/return'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/bulk-heic-to-jpg'
+    | '/sitemap.xml'
+    | '/oauth/google-drive/return'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  BulkHeicToJpgRoute: typeof BulkHeicToJpgRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   OauthGoogleDriveReturnRoute: typeof OauthGoogleDriveReturnRoute
 }
@@ -83,6 +109,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bulk-heic-to-jpg': {
+      id: '/bulk-heic-to-jpg'
+      path: '/bulk-heic-to-jpg'
+      fullPath: '/bulk-heic-to-jpg'
+      preLoaderRoute: typeof BulkHeicToJpgRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -105,9 +138,20 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  BulkHeicToJpgRoute: BulkHeicToJpgRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   OauthGoogleDriveReturnRoute: OauthGoogleDriveReturnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
