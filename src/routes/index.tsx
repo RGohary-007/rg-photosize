@@ -123,6 +123,14 @@ function download(blob: Blob, name: string) {
 
 const EMPTY_SUMMARY: Summary = { count: 0, failed: 0, before: 0, after: 0, byFormat: [] };
 
+/** Upload cap per batch. */
+const MAX_PHOTOS = 500;
+/** Above this many photos, convert in chunks with a short breather between them. */
+const THROTTLE_AFTER = 25;
+const CHUNK_SIZE = 5;
+const CHUNK_PAUSE_MS = 100;
+
+
 function Index() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<Item[]>([]);
@@ -205,8 +213,19 @@ function Index() {
       toast.error("Those files aren't images.");
       return;
     }
+    const room = MAX_PHOTOS - items.length;
+    if (room <= 0) {
+      toast.error(`You can process up to ${MAX_PHOTOS} photos at a time.`);
+      return;
+    }
+    const batch = accepted.slice(0, room);
+    if (batch.length < accepted.length) {
+      toast.warning(
+        `Only ${batch.length} added — the limit is ${MAX_PHOTOS} photos at a time.`,
+      );
+    }
     const next: Item[] = await Promise.all(
-      accepted.map(async (f) => {
+      batch.map(async (f) => {
         const { date, fromExif } = await readOriginalDate(f);
         return {
           id: crypto.randomUUID(),
@@ -221,6 +240,7 @@ function Index() {
     );
     setItems((prev) => [...prev, ...next]);
   }
+
 
   function handleFormat(f: OutputFormat) {
     setFormat(f);
@@ -258,26 +278,39 @@ function Index() {
     let failed = 0;
     let generatedMetadata = 0;
     try {
-      const results = await Promise.all(
-        items.map(async (item) => {
-          try {
-            const r = await convertImage(item.file, {
-              format,
-              quality,
-              resizeEnabled,
-              maxWidth,
-              maxHeight,
-              preserveMetadata,
-            });
-            if (r.fellBackToJpeg) fallbacks++;
-            if (r.metadataSource === "generated") generatedMetadata++;
-            return { item, r, error: null as string | null };
-          } catch (error) {
-            failed++;
-            return { item, r: null, error: (error as Error).message };
+      const convertOne = async (item: Item) => {
+        try {
+          const r = await convertImage(item.file, {
+            format,
+            quality,
+            resizeEnabled,
+            maxWidth,
+            maxHeight,
+            preserveMetadata,
+          });
+          if (r.fellBackToJpeg) fallbacks++;
+          if (r.metadataSource === "generated") generatedMetadata++;
+          return { item, r, error: null as string | null };
+        } catch (error) {
+          failed++;
+          return { item, r: null, error: (error as Error).message };
+        }
+      };
+
+      type ConvertOutcome = Awaited<ReturnType<typeof convertOne>>;
+      let results: ConvertOutcome[] = [];
+      if (items.length > THROTTLE_AFTER) {
+        for (let i = 0; i < items.length; i += CHUNK_SIZE) {
+          const chunk = items.slice(i, i + CHUNK_SIZE);
+          results = results.concat(await Promise.all(chunk.map(convertOne)));
+          if (i + CHUNK_SIZE < items.length) {
+            await new Promise((r) => setTimeout(r, CHUNK_PAUSE_MS));
           }
-        }),
-      );
+        }
+      } else {
+        results = await Promise.all(items.map(convertOne));
+      }
+
 
       setItems((prev) => {
         const map = new Map(results.map((x) => [x.item.id, x]));
@@ -521,8 +554,9 @@ function Index() {
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Drag photos straight onto this box, or pick them from your library — everything stays
-              on your device
+              on your device. Up to {MAX_PHOTOS} photos at a time.
             </p>
+
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <Button className="rounded-2xl" onClick={() => inputRef.current?.click()}>
                 Photo library
