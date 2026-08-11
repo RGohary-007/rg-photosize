@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
   ImagePlus,
   Trash2,
@@ -444,6 +444,13 @@ function Index() {
             <p className="text-xs text-muted-foreground">
               JPEG, HEIC, PNG and WebP, straight from your photo library
             </p>
+            <Link
+              to="/bulk-heic-to-jpg"
+              className="mt-1 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Bulk HEIC to JPG converter
+            </Link>
+
 
           </div>
           <div className="ml-auto flex items-center gap-2">

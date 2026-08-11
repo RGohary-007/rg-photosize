@@ -206,6 +206,7 @@ export function DrivePicker({ open, onOpenChange, onImport, onSignIn }: Props) {
                 <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   className="rounded-xl pl-9"
+                  aria-label="Search photo names"
                   placeholder="Search photo names"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -217,6 +218,7 @@ export function DrivePicker({ open, onOpenChange, onImport, onSignIn }: Props) {
               <Button
                 variant="outline"
                 className="rounded-xl"
+                aria-label="Refresh photos"
                 onClick={() => void load(search)}
                 disabled={loading}
               >
