@@ -205,8 +205,19 @@ function Index() {
       toast.error("Those files aren't images.");
       return;
     }
+    const room = MAX_PHOTOS - items.length;
+    if (room <= 0) {
+      toast.error(`You can process up to ${MAX_PHOTOS} photos at a time.`);
+      return;
+    }
+    const batch = accepted.slice(0, room);
+    if (batch.length < accepted.length) {
+      toast.warning(
+        `Only ${batch.length} added — the limit is ${MAX_PHOTOS} photos at a time.`,
+      );
+    }
     const next: Item[] = await Promise.all(
-      accepted.map(async (f) => {
+      batch.map(async (f) => {
         const { date, fromExif } = await readOriginalDate(f);
         return {
           id: crypto.randomUUID(),
@@ -221,6 +232,7 @@ function Index() {
     );
     setItems((prev) => [...prev, ...next]);
   }
+
 
   function handleFormat(f: OutputFormat) {
     setFormat(f);
