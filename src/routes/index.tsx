@@ -554,8 +554,9 @@ function Index() {
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Drag photos straight onto this box, or pick them from your library — everything stays
-              on your device
+              on your device. Up to {MAX_PHOTOS} photos at a time.
             </p>
+
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <Button className="rounded-2xl" onClick={() => inputRef.current?.click()}>
                 Photo library
