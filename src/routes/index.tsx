@@ -123,6 +123,14 @@ function download(blob: Blob, name: string) {
 
 const EMPTY_SUMMARY: Summary = { count: 0, failed: 0, before: 0, after: 0, byFormat: [] };
 
+/** Upload cap per batch. */
+const MAX_PHOTOS = 500;
+/** Above this many photos, convert in chunks with a short breather between them. */
+const THROTTLE_AFTER = 25;
+const CHUNK_SIZE = 5;
+const CHUNK_PAUSE_MS = 100;
+
+
 function Index() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<Item[]>([]);
