@@ -278,26 +278,39 @@ function Index() {
     let failed = 0;
     let generatedMetadata = 0;
     try {
-      const results = await Promise.all(
-        items.map(async (item) => {
-          try {
-            const r = await convertImage(item.file, {
-              format,
-              quality,
-              resizeEnabled,
-              maxWidth,
-              maxHeight,
-              preserveMetadata,
-            });
-            if (r.fellBackToJpeg) fallbacks++;
-            if (r.metadataSource === "generated") generatedMetadata++;
-            return { item, r, error: null as string | null };
-          } catch (error) {
-            failed++;
-            return { item, r: null, error: (error as Error).message };
+      const convertOne = async (item: Item) => {
+        try {
+          const r = await convertImage(item.file, {
+            format,
+            quality,
+            resizeEnabled,
+            maxWidth,
+            maxHeight,
+            preserveMetadata,
+          });
+          if (r.fellBackToJpeg) fallbacks++;
+          if (r.metadataSource === "generated") generatedMetadata++;
+          return { item, r, error: null as string | null };
+        } catch (error) {
+          failed++;
+          return { item, r: null, error: (error as Error).message };
+        }
+      };
+
+      type ConvertOutcome = Awaited<ReturnType<typeof convertOne>>;
+      let results: ConvertOutcome[] = [];
+      if (items.length > THROTTLE_AFTER) {
+        for (let i = 0; i < items.length; i += CHUNK_SIZE) {
+          const chunk = items.slice(i, i + CHUNK_SIZE);
+          results = results.concat(await Promise.all(chunk.map(convertOne)));
+          if (i + CHUNK_SIZE < items.length) {
+            await new Promise((r) => setTimeout(r, CHUNK_PAUSE_MS));
           }
-        }),
-      );
+        }
+      } else {
+        results = await Promise.all(items.map(convertOne));
+      }
+
 
       setItems((prev) => {
         const map = new Map(results.map((x) => [x.item.id, x]));
