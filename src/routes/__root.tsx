@@ -93,7 +93,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Resize and convert photos in your browser — JPEG, HEIC, PNG and WebP.",
       },
       { property: "og:type", content: "website" },
+      {
+        property: "og:image",
+        content: "https://images.pexels.com/photos/30591531/pexels-photo-30591531.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "PhotoSize — Resize & convert photos" },
+      {
+        name: "twitter:description",
+        content: "Resize and convert photos in your browser — JPEG, HEIC, PNG and WebP.",
+      },
+      {
+        name: "twitter:image",
+        content: "https://images.pexels.com/photos/30591531/pexels-photo-30591531.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      },
       {
         name: "google-site-verification",
         content: "wer_wUvqTRspKphIPWcV0b1vdb7QtxWdbVlORHMFhXU",

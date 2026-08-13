@@ -1,19 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import {
-  ImagePlus,
-  Trash2,
-  Download,
-  Loader2,
-  Wand2,
-  Images,
-  AlertCircle,
-  ListX,
-  BarChart3,
-  ChevronDown,
-  Cloud,
-  Apple,
-} from "lucide-react";
+import { ImagePlus, Trash2, Download, Loader as Loader2, Wand as Wand2, Images, CircleAlert as AlertCircle, ListX, ChartBar as BarChart3, ChevronDown, Cloud, Apple } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -63,7 +50,20 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://rg-photosize.lovable.app/" },
+      {
+        property: "og:image",
+        content: "https://images.pexels.com/photos/30591531/pexels-photo-30591531.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "PhotoSize — Convert & Resize Photos" },
+      {
+        name: "twitter:description",
+        content: "Resize and convert your photo library to JPEG, HEIC, PNG or WebP with optional metadata preservation.",
+      },
+      {
+        name: "twitter:image",
+        content: "https://images.pexels.com/photos/30591531/pexels-photo-30591531.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      },
     ],
     links: [{ rel: "canonical", href: "https://rg-photosize.lovable.app/" }],
     scripts: [

@@ -36,7 +36,20 @@ export const Route = createFileRoute("/bulk-heic-to-jpg")({
       { property: "og:description", content: DESCRIPTION },
       { property: "og:type", content: "website" },
       { property: "og:url", content: URL },
+      {
+        property: "og:image",
+        content: "https://images.pexels.com/photos/30591531/pexels-photo-30591531.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Bulk HEIC to JPG Converter" },
+      {
+        name: "twitter:description",
+        content: DESCRIPTION,
+      },
+      {
+        name: "twitter:image",
+        content: "https://images.pexels.com/photos/30591531/pexels-photo-30591531.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      },
     ],
     links: [{ rel: "canonical", href: URL }],
     scripts: [
