@@ -18,7 +18,6 @@ import { SaveAllDialog } from "@/components/converter/SaveAllDialog";
 import { ConversionSummary, type Summary } from "@/components/converter/SummaryDialog";
 import {
   convertImage,
-  canEncode,
   formatBytes,
   formatDateTime,
   renameFile,
@@ -36,17 +35,17 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PhotoSize — Convert Photos: JPEG, HEIC, PNG, WebP" },
+      { title: "PhotoSize — Convert Photos: JPEG, PNG, PDF" },
       {
         name: "description",
         content:
-          "Convert and resize photos from your library to JPEG, HEIC, PNG or WebP, keep EXIF metadata, and save them individually or as a zip.",
+          "Convert and resize photos from your library to JPEG, PNG or PDF, keep EXIF metadata, and save them individually or as a zip.",
       },
       { property: "og:title", content: "PhotoSize — Convert & Resize Photos" },
       {
         property: "og:description",
         content:
-          "Resize and convert your photo library to JPEG, HEIC, PNG or WebP with optional metadata preservation.",
+          "Resize and convert your photo library to JPEG, PNG or PDF with optional metadata preservation.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://rg-photosize.lovable.app/" },
@@ -58,7 +57,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:title", content: "PhotoSize — Convert & Resize Photos" },
       {
         name: "twitter:description",
-        content: "Resize and convert your photo library to JPEG, HEIC, PNG or WebP with optional metadata preservation.",
+        content: "Resize and convert your photo library to JPEG, PNG or PDF with optional metadata preservation.",
       },
       {
         name: "twitter:image",
@@ -77,7 +76,7 @@ export const Route = createFileRoute("/")({
           applicationCategory: "MultimediaApplication",
           operatingSystem: "Any modern web browser",
           description:
-            "Convert and resize photos to JPEG, HEIC, PNG or WebP in the browser while keeping camera metadata.",
+            "Convert and resize photos to JPEG, PNG or PDF in the browser while keeping camera metadata.",
         }),
       },
     ],
@@ -145,7 +144,6 @@ function Index() {
   const [saveOpen, setSaveOpen] = useState(false);
   const [summary, setSummary] = useState<Summary>(EMPTY_SUMMARY);
   const [summaryOpen, setSummaryOpen] = useState(false);
-  const [heicSupported, setHeicSupported] = useState(true);
   const [dragging, setDragging] = useState(false);
   const [driveOpen, setDriveOpen] = useState(false);
   const [account, setAccount] = useState<string | null>(null);
@@ -159,16 +157,6 @@ function Index() {
       setAccount(session?.user.email ?? null);
     });
     return () => sub.subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    let alive = true;
-    void canEncode("heic").then((ok) => {
-      if (alive) setHeicSupported(ok);
-    });
-    return () => {
-      alive = false;
-    };
   }, []);
 
 
@@ -475,7 +463,7 @@ function Index() {
               PhotoSize — Resize and convert photos
             </h1>
             <p className="text-xs text-muted-foreground">
-              JPEG, HEIC, PNG and WebP, straight from your photo library
+              JPEG, PNG and PDF, straight from your photo library
             </p>
             <Link
               to="/bulk-heic-to-jpg"
@@ -744,7 +732,6 @@ function Index() {
             maxHeight={maxHeight}
             preserveMetadata={preserveMetadata}
             originals={originals}
-            heicSupported={heicSupported}
 
             onFormat={handleFormat}
             onQuality={setQuality}

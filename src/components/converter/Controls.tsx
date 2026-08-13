@@ -18,19 +18,14 @@ const FORMATS: { value: OutputFormat; label: string; use: string }[] = [
     use: "Everyday photos, sharing and printing. Works everywhere and gives the smallest files for camera shots.",
   },
   {
-    value: "heic",
-    label: "HEIC",
-    use: "Apple's own photo format. Roughly half the size of JPEG at the same quality — ideal to keep inside iPhone, iPad and Mac.",
-  },
-  {
     value: "png",
     label: "PNG",
     use: "Screenshots, logos and graphics with sharp edges or transparency.",
   },
   {
-    value: "webp",
-    label: "WebP",
-    use: "Websites and app assets. Excellent quality per kilobyte for modern browsers.",
+    value: "pdf",
+    label: "PDF",
+    use: "Documents and print-ready files. Each photo becomes a single-page PDF.",
   },
 ];
 
@@ -49,7 +44,6 @@ type Props = {
   maxHeight: number;
   preserveMetadata: boolean;
   originals: OriginalsMode;
-  heicSupported: boolean;
   onFormat: (f: OutputFormat) => void;
   onQuality: (q: number) => void;
   onResizeEnabled: (v: boolean) => void;
@@ -68,8 +62,6 @@ export function Controls({
   maxHeight,
   preserveMetadata,
   originals,
-  heicSupported,
-
 
   onFormat,
   onQuality,
@@ -91,7 +83,7 @@ export function Controls({
             <span className="text-xs text-muted-foreground">Locked to JPEG by metadata</span>
           )}
         </div>
-        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-secondary p-1">
+        <div className="grid grid-cols-3 gap-1 rounded-2xl bg-secondary p-1">
           {FORMATS.map((f) => (
             <button
               key={f.value}
@@ -110,17 +102,6 @@ export function Controls({
           ))}
         </div>
         <p className="text-xs leading-relaxed text-muted-foreground">{active.use}</p>
-        {format === "heic" && !heicSupported && (
-          <p
-            data-testid="heic-unsupported"
-            className="rounded-2xl border border-warning/40 bg-warning/10 p-3 text-xs leading-relaxed"
-          >
-            <strong className="text-foreground">This browser cannot write HEIC files.</strong>{" "}
-            Apple only allows HEIC to be created by the Photos app itself, so these photos will be
-            saved as JPEG instead (with the camera data and original date kept).
-          </p>
-        )}
-
       </section>
 
       <section className="space-y-3" data-testid="resize-section">
@@ -207,7 +188,7 @@ export function Controls({
           className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-xs leading-relaxed"
         >
           <p className="font-semibold text-foreground">
-            {format === "png" ? "PNG is lossless" : "WebP here is saved lossless"}
+            PNG is lossless
           </p>
           <p className="mt-1 text-muted-foreground">
             Every pixel is kept exactly as it is,

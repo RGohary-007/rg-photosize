@@ -83,14 +83,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "PhotoSize resizes and converts photos to JPEG, HEIC, PNG or WebP right in your browser, with camera metadata kept.",
+          "PhotoSize resizes and converts photos to JPEG, PNG or PDF right in your browser, with camera metadata kept.",
       },
       { name: "author", content: "PhotoSize" },
       { property: "og:site_name", content: "PhotoSize" },
       { property: "og:title", content: "PhotoSize — Resize & convert photos" },
       {
         property: "og:description",
-        content: "Resize and convert photos in your browser — JPEG, HEIC, PNG and WebP.",
+        content: "Resize and convert photos in your browser — JPEG, PNG and PDF.",
       },
       { property: "og:type", content: "website" },
       {
@@ -101,7 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "PhotoSize — Resize & convert photos" },
       {
         name: "twitter:description",
-        content: "Resize and convert photos in your browser — JPEG, HEIC, PNG and WebP.",
+        content: "Resize and convert photos in your browser — JPEG, PNG and PDF.",
       },
       {
         name: "twitter:image",
@@ -130,14 +130,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               name: "PhotoSize",
               url: "https://rg-photosize.lovable.app",
               description:
-                "PhotoSize is a browser-based photo converter that resizes photos and converts them to JPEG, HEIC, PNG or WebP while keeping camera metadata.",
+                "PhotoSize is a browser-based photo converter that resizes photos and converts them to JPEG, PNG or PDF while keeping camera metadata.",
             },
             {
               "@type": "WebSite",
               name: "PhotoSize",
               url: "https://rg-photosize.lovable.app",
               description:
-                "Resize and convert photos to JPEG, HEIC, PNG or WebP directly in the browser.",
+                "Resize and convert photos to JPEG, PNG or PDF directly in the browser.",
             },
           ],
         }),
