@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -15,12 +14,12 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "Sign in to PhotoSize to connect your Google Drive and import your own photos for resizing and converting.",
+          "Sign in to PhotoSize to sync your conversion history across devices.",
       },
       { property: "og:title", content: "Sign in — PhotoSize" },
       {
         property: "og:description",
-        content: "Sign in to connect Google Drive and import your own photos into PhotoSize.",
+        content: "Sign in to PhotoSize to sync your conversion history.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -73,18 +72,6 @@ function AuthPage() {
     }
   }
 
-  async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("Google sign-in failed. Please try again.");
-      return;
-    }
-    if (result.redirected) return;
-    void navigate({ to: "/" });
-  }
-
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center gap-6 px-5 py-10">
       <div className="space-y-1 text-center">
@@ -92,19 +79,9 @@ function AuthPage() {
           {mode === "signin" ? "Sign in" : "Create an account"}
         </h1>
         <p className="text-sm text-muted-foreground">
-          An account is only needed to import photos from your own Google Drive. Converting photos
-          from this device never needs one.
+          Sign in to sync your conversion history across devices. Converting photos
+          from this device never needs an account.
         </p>
-      </div>
-
-      <Button variant="outline" className="rounded-2xl" onClick={() => void google()}>
-        Continue with Google
-      </Button>
-
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="h-px flex-1 bg-border" />
-        or use email
-        <span className="h-px flex-1 bg-border" />
       </div>
 
       <form className="space-y-4" onSubmit={submit}>

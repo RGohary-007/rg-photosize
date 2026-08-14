@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
-const BASE_URL = "https://rg-photosize.lovable.app";
+const BASE_URL = "https://photosize.app";
 
 interface SitemapEntry {
   path: string;

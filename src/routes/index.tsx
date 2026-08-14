@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { ImagePlus, Trash2, Download, Loader as Loader2, Wand as Wand2, Images, CircleAlert as AlertCircle, ListX, ChartBar as BarChart3, ChevronDown, Cloud, Apple } from "lucide-react";
+import { ImagePlus, Trash2, Download, Loader as Loader2, Wand as Wand2, Images, CircleAlert as AlertCircle, ListX, ChartBar as BarChart3, ChevronDown, Apple } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,6 @@ import {
   type MetadataSource,
   type OutputFormat,
 } from "@/lib/convert";
-import { DrivePicker } from "@/components/converter/DrivePicker";
 import { supabase } from "@/integrations/supabase/client";
 import { readOriginalDate } from "@/lib/exif";
 import { createZip } from "@/lib/zip";
@@ -48,7 +47,7 @@ export const Route = createFileRoute("/")({
           "Resize and convert your photo library to JPEG, PNG or PDF with optional metadata preservation.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://rg-photosize.lovable.app/" },
+      { property: "og:url", content: "https://photosize.app/" },
       {
         property: "og:image",
         content: "https://images.pexels.com/photos/30591531/pexels-photo-30591531.jpeg?auto=compress&cs=tinysrgb&w=1200",
@@ -64,7 +63,7 @@ export const Route = createFileRoute("/")({
         content: "https://images.pexels.com/photos/30591531/pexels-photo-30591531.jpeg?auto=compress&cs=tinysrgb&w=1200",
       },
     ],
-    links: [{ rel: "canonical", href: "https://rg-photosize.lovable.app/" }],
+    links: [{ rel: "canonical", href: "https://photosize.app/" }],
     scripts: [
       {
         type: "application/ld+json",
@@ -72,7 +71,7 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "WebApplication",
           name: "PhotoSize",
-          url: "https://rg-photosize.lovable.app/",
+          url: "https://photosize.app/",
           applicationCategory: "MultimediaApplication",
           operatingSystem: "Any modern web browser",
           description:
@@ -145,7 +144,6 @@ function Index() {
   const [summary, setSummary] = useState<Summary>(EMPTY_SUMMARY);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [driveOpen, setDriveOpen] = useState(false);
   const [account, setAccount] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -447,7 +445,7 @@ function Index() {
 
   function comingSoon(service: string) {
     toast.info(
-      `${service} has no public web access, so photos can\u2019t be read directly. Save them to this device or to Google Drive first.`,
+      `${service} has no public web access, so photos can\u2019t be read directly. Save them to this device first.`,
     );
   }
 
@@ -563,10 +561,6 @@ function Index() {
                     This device
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => setDriveOpen(true)}>
-                    <Cloud className="size-4" />
-                    Google Drive
-                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => comingSoon("iCloud Photos")}>
                     <Apple className="size-4" />
                     iCloud Photos
@@ -783,16 +777,6 @@ function Index() {
         onOpenChange={setSaveOpen}
         onIndividual={() => void saveIndividual()}
         onZip={saveZip}
-      />
-
-      <DrivePicker
-        open={driveOpen}
-        onOpenChange={setDriveOpen}
-        onImport={(files) => void addFiles(files)}
-        onSignIn={() => {
-          setDriveOpen(false);
-          void navigate({ to: "/auth" });
-        }}
       />
 
     </main>

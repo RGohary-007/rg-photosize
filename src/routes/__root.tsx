@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { reportError } from "../lib/error-reporting";
 
 function NotFoundComponent() {
   return (
@@ -40,7 +40,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    reportError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
@@ -128,14 +128,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             {
               "@type": "Organization",
               name: "PhotoSize",
-              url: "https://rg-photosize.lovable.app",
+              url: "https://photosize.app",
               description:
                 "PhotoSize is a browser-based photo converter that resizes photos and converts them to JPEG, PNG or PDF while keeping camera metadata.",
             },
             {
               "@type": "WebSite",
               name: "PhotoSize",
-              url: "https://rg-photosize.lovable.app",
+              url: "https://photosize.app",
               description:
                 "Resize and convert photos to JPEG, PNG or PDF directly in the browser.",
             },

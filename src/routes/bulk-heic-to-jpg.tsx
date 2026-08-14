@@ -3,7 +3,7 @@ import { ArrowRight, ShieldCheck, Zap, Images, FileDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-const URL = "https://rg-photosize.lovable.app/bulk-heic-to-jpg";
+const URL = "https://photosize.app/bulk-heic-to-jpg";
 const TITLE = "Bulk HEIC to JPG Converter — Convert iPhone Photos";
 const DESCRIPTION =
   "Convert HEIC photos to JPG in bulk, right in your browser. Batch-resize iPhone images, keep EXIF camera data and capture dates, and download everything as a zip.";
@@ -75,7 +75,7 @@ export const Route = createFileRoute("/bulk-heic-to-jpg")({
               "@type": "ListItem",
               position: 1,
               name: "Home",
-              item: "https://rg-photosize.lovable.app/",
+              item: "https://photosize.app/",
             },
             {
               "@type": "ListItem",
