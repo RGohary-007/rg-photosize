@@ -34,50 +34,20 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/convert")({
   head: () => ({
     meta: [
-      { title: "PhotoSize — Convert Photos: JPEG, PNG, PDF" },
+      { title: "Converter — PhotoSize" },
       {
         name: "description",
         content:
-          "Convert and resize photos from your library to JPEG, PNG or PDF, keep EXIF metadata, and save them individually or as a zip.",
+          "Resize and convert your photos to JPEG, PNG or WebP while keeping camera metadata.",
       },
-      { property: "og:title", content: "PhotoSize — Convert & Resize Photos" },
+      { property: "og:title", content: "Converter — PhotoSize" },
       {
         property: "og:description",
-        content:
-          "Resize and convert your photo library to JPEG, PNG or PDF with optional metadata preservation.",
+        content: "Resize and convert your photos while keeping camera metadata.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://photosize.app/" },
-      {
-        property: "og:image",
-        content: "https://images.pexels.com/photos/30591531/pexels-photo-30591531.jpeg?auto=compress&cs=tinysrgb&w=1200",
-      },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "PhotoSize — Convert & Resize Photos" },
-      {
-        name: "twitter:description",
-        content: "Resize and convert your photo library to JPEG, PNG or PDF with optional metadata preservation.",
-      },
-      {
-        name: "twitter:image",
-        content: "https://images.pexels.com/photos/30591531/pexels-photo-30591531.jpeg?auto=compress&cs=tinysrgb&w=1200",
-      },
-    ],
-    links: [{ rel: "canonical", href: "https://photosize.app/" }],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebApplication",
-          name: "PhotoSize",
-          url: "https://photosize.app/",
-          applicationCategory: "MultimediaApplication",
-          operatingSystem: "Any modern web browser",
-          description:
-            "Convert and resize photos to JPEG, PNG or PDF in the browser while keeping camera metadata.",
-        }),
-      },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
 
