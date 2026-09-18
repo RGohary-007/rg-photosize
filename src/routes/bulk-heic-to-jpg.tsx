@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 const URL = "https://photosize.app/bulk-heic-to-jpg";
 const TITLE = "Bulk HEIC to JPG Converter — Convert iPhone Photos";
 const DESCRIPTION =
-  "Convert HEIC photos to JPG in bulk, right in your browser. Batch-resize iPhone images, keep EXIF camera data and capture dates, and download everything as a zip.";
+  "Convert HEIC photos to JPG in bulk in your browser. Batch-resize iPhone images, keep EXIF camera data and capture dates, download as a zip.";
 
 const faqs = [
   {
