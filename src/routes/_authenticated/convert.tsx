@@ -533,7 +533,7 @@ function Index() {
                     This device
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => comingSoon("Google Photos")}>
+                  <DropdownMenuItem onSelect={() => setGooglePhotosOpen(true)}>
                     <Cloud className="size-4" />
                     Google Photos
                   </DropdownMenuItem>
@@ -750,6 +750,13 @@ function Index() {
         onIndividual={() => void saveIndividual()}
         onZip={saveZip}
       />
+
+      <GooglePhotosDialog
+        open={googlePhotosOpen}
+        onOpenChange={setGooglePhotosOpen}
+        onImport={importFromGooglePhotos}
+      />
+
 
     </main>
   );
