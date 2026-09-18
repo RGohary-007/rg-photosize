@@ -10,13 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BulkHeicToJpgRouteImport } from './routes/bulk-heic-to-jpg'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AuthenticatedConvertRouteImport } from './routes/_authenticated/convert'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -34,36 +40,53 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedConvertRoute = AuthenticatedConvertRouteImport.update({
+  id: '/convert',
+  path: '/convert',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/convert': typeof AuthenticatedConvertRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/convert': typeof AuthenticatedConvertRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/convert': typeof AuthenticatedConvertRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml'
+  fullPaths: '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml' | '/convert'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml'
-  id: '__root__' | '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml'
+  to: '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml' | '/convert'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/bulk-heic-to-jpg'
+    | '/sitemap.xml'
+    | '/_authenticated/convert'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BulkHeicToJpgRoute: typeof BulkHeicToJpgRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -76,6 +99,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -99,11 +129,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/convert': {
+      id: '/_authenticated/convert'
+      path: '/convert'
+      fullPath: '/convert'
+      preLoaderRoute: typeof AuthenticatedConvertRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedConvertRoute: typeof AuthenticatedConvertRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedConvertRoute: AuthenticatedConvertRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BulkHeicToJpgRoute: BulkHeicToJpgRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
