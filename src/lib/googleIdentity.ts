@@ -52,7 +52,7 @@ export function readStoredToken(): string | null {
   }
 }
 
-function storeToken(token: string, expiresInSeconds: number) {
+export function storeToken(token: string, expiresInSeconds: number) {
   try {
     const value: StoredToken = {
       token,
@@ -125,7 +125,7 @@ export async function authorizeGooglePhotos(clientId: string): Promise<Authorize
       callback: (response) => {
         if (response.access_token) {
           storeToken(response.access_token, Number(response.expires_in ?? 3600));
-          done({ kind: "token", token: response.access_token });
+          done({ kind: "token", token: response.access_token, expiresIn: Number(response.expires_in ?? 3600) });
           return;
         }
         const error = response.error ?? "";
