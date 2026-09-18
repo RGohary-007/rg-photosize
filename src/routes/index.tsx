@@ -110,7 +110,7 @@ function Landing() {
               size="sm"
               className="rounded-2xl"
               onClick={() =>
-                void navigate({ to: signedIn ? "/_authenticated/convert" : "/auth" })
+                void navigate({ to: signedIn ? "/convert" : "/auth" })
               }
             >
               {signedIn ? "Open the converter" : "Sign in with Google"}
@@ -131,7 +131,7 @@ function Landing() {
           <Button
             className="h-11 rounded-2xl px-6 text-sm font-semibold"
             onClick={() =>
-              void navigate({ to: signedIn ? "/_authenticated/convert" : "/auth" })
+              void navigate({ to: signedIn ? "/convert" : "/auth" })
             }
           >
             {signedIn ? "Open the converter" : "Continue with Google"}
