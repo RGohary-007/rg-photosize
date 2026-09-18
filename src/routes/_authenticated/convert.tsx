@@ -527,9 +527,9 @@ function Index() {
                     This device
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => comingSoon("iCloud Photos")}>
-                    <Apple className="size-4" />
-                    iCloud Photos
+                  <DropdownMenuItem onSelect={() => comingSoon("Google Photos")}>
+                    <Cloud className="size-4" />
+                    Google Photos
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
