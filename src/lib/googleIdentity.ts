@@ -7,7 +7,7 @@ const STORAGE_KEY = "photosize.googlePhotosToken";
 type StoredToken = { token: string; expiresAt: number };
 
 export type AuthorizeOutcome =
-  | { kind: "token"; token: string }
+  | { kind: "token"; token: string; expiresIn: number }
   | { kind: "cancelled" }
   | { kind: "denied"; message: string }
   | { kind: "error"; message: string };
