@@ -31,7 +31,10 @@ async function callPicker(
 
 /** The OAuth client id is public by design; it is stored as a project secret. */
 export const getGooglePhotosConfig = createServerFn({ method: "GET" }).handler(async () => {
-  const clientId = process.env["GOOGLE_PHOTOS_CLIENT_ID"] ?? null;
+  const clientId =
+    process.env["GOOGLE_OAUTH_CLIENT_ID"] ??
+    process.env["GOOGLE_PHOTOS_CLIENT_ID"] ??
+    null;
   return { clientId, configured: Boolean(clientId) };
 });
 
