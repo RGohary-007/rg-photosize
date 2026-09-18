@@ -19,9 +19,10 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import {
-  authorizeGooglePhotos,
   clearStoredToken,
   readStoredToken,
+  storeToken,
+  type AuthorizeOutcome,
 } from "@/lib/googleIdentity";
 import {
   createPickerSession,
@@ -58,6 +59,50 @@ function base64ToBlob(base64: string, type: string): Blob {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
   return new Blob([bytes], { type });
+}
+
+/**
+ * Google Identity Services cannot run inside the preview iframe, so we open a
+ * same-origin popup route that runs GIS at the top level and posts the token back.
+ */
+function authorizeViaPopup(): Promise<AuthorizeOutcome> {
+  return new Promise<AuthorizeOutcome>((resolve) => {
+    const popup = window.open("/google-photos-auth", "photosize-google-photos", "width=560,height=720");
+    let settled = false;
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    const cleanup = () => {
+      if (timer) clearInterval(timer);
+      if (timeout) clearTimeout(timeout);
+      window.removeEventListener("message", onMessage);
+    };
+    const finish = (outcome: AuthorizeOutcome) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(outcome);
+    };
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      const data = event.data as { type?: string; outcome?: AuthorizeOutcome };
+      if (data?.type !== "photosize:google-photos-auth" || !data.outcome) return;
+      finish(data.outcome);
+    };
+    window.addEventListener("message", onMessage);
+
+    if (!popup) {
+      finish({
+        kind: "error",
+        message: "The Google sign-in popup was blocked. Allow popups for this site and try again.",
+      });
+      return;
+    }
+    timer = setInterval(() => {
+      if (popup.closed) finish({ kind: "cancelled" });
+    }, 800);
+    timeout = setTimeout(() => finish({ kind: "cancelled" }), 5 * 60 * 1000);
+  });
 }
 
 export function GooglePhotosDialog({ open, onOpenChange, onImport }: Props) {
@@ -168,7 +213,7 @@ export function GooglePhotosDialog({ open, onOpenChange, onImport }: Props) {
     let token = readStoredToken();
     if (!token) {
       setPhase("authorizing");
-      const outcome = await authorizeGooglePhotos(clientId);
+      const outcome = await authorizeViaPopup();
       if (cancelled.current) return;
       if (outcome.kind === "cancelled") {
         setPhase("cancelled");
@@ -185,6 +230,7 @@ export function GooglePhotosDialog({ open, onOpenChange, onImport }: Props) {
         return;
       }
       token = outcome.token;
+      storeToken(token, outcome.expiresIn);
     }
 
     try {
