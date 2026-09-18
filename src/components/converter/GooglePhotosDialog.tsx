@@ -19,9 +19,10 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import {
-  authorizeGooglePhotos,
   clearStoredToken,
   readStoredToken,
+  storeToken,
+  type AuthorizeOutcome,
 } from "@/lib/googleIdentity";
 import {
   createPickerSession,

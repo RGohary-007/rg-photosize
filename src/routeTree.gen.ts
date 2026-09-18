@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BulkHeicToJpgRouteImport } from './routes/bulk-heic-to-jpg'
+import { Route as GooglePhotosAuthRouteImport } from './routes/google-photos-auth'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedConvertRouteImport } from './routes/_authenticated/convert'
 
@@ -35,6 +36,11 @@ const BulkHeicToJpgRoute = BulkHeicToJpgRouteImport.update({
   path: '/bulk-heic-to-jpg',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GooglePhotosAuthRoute = GooglePhotosAuthRouteImport.update({
+  id: '/google-photos-auth',
+  path: '/google-photos-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -50,6 +56,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
+  '/google-photos-auth': typeof GooglePhotosAuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/convert': typeof AuthenticatedConvertRoute
 }
@@ -57,6 +64,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
+  '/google-photos-auth': typeof GooglePhotosAuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/convert': typeof AuthenticatedConvertRoute
 }
@@ -66,20 +74,34 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
+  '/google-photos-auth': typeof GooglePhotosAuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/convert': typeof AuthenticatedConvertRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml' | '/convert'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/bulk-heic-to-jpg'
+    | '/google-photos-auth'
+    | '/sitemap.xml'
+    | '/convert'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml' | '/convert'
+  to:
+    | '/'
+    | '/auth'
+    | '/bulk-heic-to-jpg'
+    | '/google-photos-auth'
+    | '/sitemap.xml'
+    | '/convert'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/bulk-heic-to-jpg'
+    | '/google-photos-auth'
     | '/sitemap.xml'
     | '/_authenticated/convert'
   fileRoutesById: FileRoutesById
@@ -89,6 +111,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BulkHeicToJpgRoute: typeof BulkHeicToJpgRoute
+  GooglePhotosAuthRoute: typeof GooglePhotosAuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -120,6 +143,13 @@ declare module '@tanstack/react-router' {
       path: '/bulk-heic-to-jpg'
       fullPath: '/bulk-heic-to-jpg'
       preLoaderRoute: typeof BulkHeicToJpgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/google-photos-auth': {
+      id: '/google-photos-auth'
+      path: '/google-photos-auth'
+      fullPath: '/google-photos-auth'
+      preLoaderRoute: typeof GooglePhotosAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -155,6 +185,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BulkHeicToJpgRoute: BulkHeicToJpgRoute,
+  GooglePhotosAuthRoute: GooglePhotosAuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
