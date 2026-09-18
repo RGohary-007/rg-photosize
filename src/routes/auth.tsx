@@ -87,10 +87,11 @@ function AuthPage() {
       });
 
       if (result.error) {
+        const raw: unknown = result.error;
         const message =
-          typeof result.error === "string"
-            ? result.error
-            : (result.error as { message?: string }).message ?? "Google sign-in failed.";
+          typeof raw === "string"
+            ? raw
+            : ((raw as { message?: string })?.message ?? "Google sign-in failed.");
         if (looksCancelled(message)) {
           setStatus({ kind: "cancelled" });
           toast.info("Google sign-in was cancelled.");
