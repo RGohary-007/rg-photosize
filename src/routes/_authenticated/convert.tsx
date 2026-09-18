@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { ImagePlus, Trash2, Download, Loader as Loader2, Wand as Wand2, Images, CircleAlert as AlertCircle, ListX, ChartBar as BarChart3, ChevronDown, Apple } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
