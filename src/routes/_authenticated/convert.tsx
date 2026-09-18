@@ -28,6 +28,8 @@ import {
   type OutputFormat,
 } from "@/lib/convert";
 import { supabase } from "@/integrations/supabase/client";
+import { GooglePhotosDialog } from "@/components/converter/GooglePhotosDialog";
+import { revokeGooglePhotos } from "@/lib/googleIdentity";
 import { readOriginalDate } from "@/lib/exif";
 import { createZip } from "@/lib/zip";
 import { cn } from "@/lib/utils";
@@ -116,6 +118,7 @@ function Index() {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [account, setAccount] = useState<string | null>(null);
+  const [googlePhotosOpen, setGooglePhotosOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -132,6 +135,7 @@ function Index() {
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
+    revokeGooglePhotos();
     await supabase.auth.signOut();
     void navigate({ to: "/auth", replace: true });
   }
@@ -422,9 +426,11 @@ function Index() {
     });
   }
 
-  function comingSoon(service: string) {
-    toast.info(
-      `${service} has no public web access, so photos can\u2019t be read directly. Save them to this device first.`,
+  async function importFromGooglePhotos(files: File[]) {
+    if (files.length === 0) return;
+    await addFiles(files);
+    toast.success(
+      `${files.length} photo${files.length === 1 ? "" : "s"} imported from Google Photos.`,
     );
   }
 
