@@ -8,14 +8,16 @@ async function callPicker(
   path: string,
   init?: { method?: string; body?: unknown },
 ) {
-  const res = await fetch(`${PICKER}${path}`, {
+  const request: RequestInit = {
     method: init?.method ?? "GET",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    body: init?.body === undefined ? undefined : JSON.stringify(init.body),
-  });
+  };
+  if (init?.body !== undefined) request.body = JSON.stringify(init.body);
+
+  const res = await fetch(`${PICKER}${path}`, request);
 
   const text = await res.text();
   if (!res.ok) {
