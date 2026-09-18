@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BulkHeicToJpgRouteImport } from './routes/bulk-heic-to-jpg'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AuthenticatedConvertRouteImport } from './routes/_authenticated/convert'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedConvertRoute = AuthenticatedConvertRouteImport.update({
+  id: '/_authenticated/convert',
+  path: '/convert',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/convert': typeof AuthenticatedConvertRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/convert': typeof AuthenticatedConvertRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,20 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/convert': typeof AuthenticatedConvertRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml'
+  fullPaths: '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml' | '/convert'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml'
-  id: '__root__' | '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml'
+  to: '/' | '/auth' | '/bulk-heic-to-jpg' | '/sitemap.xml' | '/convert'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/bulk-heic-to-jpg'
+    | '/sitemap.xml'
+    | '/_authenticated/convert'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +82,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BulkHeicToJpgRoute: typeof BulkHeicToJpgRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  AuthenticatedConvertRoute: typeof AuthenticatedConvertRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/convert': {
+      id: '/_authenticated/convert'
+      path: '/convert'
+      fullPath: '/convert'
+      preLoaderRoute: typeof AuthenticatedConvertRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +130,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BulkHeicToJpgRoute: BulkHeicToJpgRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  AuthenticatedConvertRoute: AuthenticatedConvertRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
