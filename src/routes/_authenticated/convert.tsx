@@ -443,32 +443,19 @@ function Index() {
 
           </div>
           <div className="ml-auto flex items-center gap-2">
-            {account ? (
-              <>
-                <span className="hidden max-w-[10rem] truncate text-xs text-muted-foreground sm:block">
-                  {account}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-2xl"
-                  onClick={() => {
-                    void supabase.auth.signOut();
-                  }}
-                >
-                  Sign out
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-2xl"
-                onClick={() => void navigate({ to: "/auth" })}
-              >
-                Sign in
-              </Button>
+            {account && (
+              <span className="hidden max-w-[10rem] truncate text-xs text-muted-foreground sm:block">
+                {account}
+              </span>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-2xl"
+              onClick={() => void signOut()}
+            >
+              Sign out
+            </Button>
           </div>
         </div>
       </header>
