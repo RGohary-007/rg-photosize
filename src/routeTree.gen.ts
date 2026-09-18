@@ -14,8 +14,10 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BulkHeicToJpgRouteImport } from './routes/bulk-heic-to-jpg'
 import { Route as GooglePhotosAuthRouteImport } from './routes/google-photos-auth'
+import { Route as HealthRouteImport } from './routes/health'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedConvertRouteImport } from './routes/_authenticated/convert'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,6 +43,11 @@ const GooglePhotosAuthRoute = GooglePhotosAuthRouteImport.update({
   path: '/google-photos-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HealthRoute = HealthRouteImport.update({
+  id: '/health',
+  path: '/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -51,22 +58,31 @@ const AuthenticatedConvertRoute = AuthenticatedConvertRouteImport.update({
   path: '/convert',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/google-photos-auth': typeof GooglePhotosAuthRoute
+  '/health': typeof HealthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/convert': typeof AuthenticatedConvertRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/google-photos-auth': typeof GooglePhotosAuthRoute
+  '/health': typeof HealthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/convert': typeof AuthenticatedConvertRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -75,8 +91,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/bulk-heic-to-jpg': typeof BulkHeicToJpgRoute
   '/google-photos-auth': typeof GooglePhotosAuthRoute
+  '/health': typeof HealthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/convert': typeof AuthenticatedConvertRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -85,16 +103,20 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bulk-heic-to-jpg'
     | '/google-photos-auth'
+    | '/health'
     | '/sitemap.xml'
     | '/convert'
+    | '/api/public/health'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/bulk-heic-to-jpg'
     | '/google-photos-auth'
+    | '/health'
     | '/sitemap.xml'
     | '/convert'
+    | '/api/public/health'
   id:
     | '__root__'
     | '/'
@@ -102,8 +124,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bulk-heic-to-jpg'
     | '/google-photos-auth'
+    | '/health'
     | '/sitemap.xml'
     | '/_authenticated/convert'
+    | '/api/public/health'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -112,7 +136,9 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BulkHeicToJpgRoute: typeof BulkHeicToJpgRoute
   GooglePhotosAuthRoute: typeof GooglePhotosAuthRoute
+  HealthRoute: typeof HealthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -152,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GooglePhotosAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -165,6 +198,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/convert'
       preLoaderRoute: typeof AuthenticatedConvertRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -186,7 +226,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BulkHeicToJpgRoute: BulkHeicToJpgRoute,
   GooglePhotosAuthRoute: GooglePhotosAuthRoute,
+  HealthRoute: HealthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
