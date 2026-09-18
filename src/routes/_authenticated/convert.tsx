@@ -116,6 +116,7 @@ function Index() {
   const [dragging, setDragging] = useState(false);
   const [account, setAccount] = useState<string | null>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
@@ -126,6 +127,13 @@ function Index() {
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    void navigate({ to: "/auth", replace: true });
+  }
 
 
   const readyToSave = useMemo(
